@@ -6,6 +6,7 @@ use warnings;
 use autouse 'Data::Dumper';
 
 use Scalar::Util qw/blessed/;
+use Instagram::API::Account;
 
 sub new {
     my ($invocant, $params) = @_;
@@ -32,7 +33,7 @@ sub fromApi
     $self->{text}      = $commentArray->{'text'};
     $self->{createdAt} = $commentArray->{'created_at'};
     $self->{id}        = $commentArray->{'id'};
-    $self->{user}      = Account::fromAccountPage($commentArray->{'user'});
+    $self->{user}      = Instagram::API::Account->fromAccountPage($commentArray->{'user'});
 
     return $self;
 }

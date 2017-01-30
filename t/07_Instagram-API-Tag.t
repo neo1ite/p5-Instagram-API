@@ -9,8 +9,23 @@ use utf8;
 use strict;
 use warnings;
 
+use Scalar::Util qw/blessed/;
+
 use Test::More qw(no_plan);
 BEGIN { use_ok('Instagram::API::Tag') };
+
+my $tag = Instagram::API::Tag->new();
+
+ok(blessed($tag) && $tag->isa('Instagram::API::Tag'));
+
+ok(exists($tag->{mediaCount}));
+ok(exists($tag->{name}));
+ok(exists($tag->{id}));
+
+my $tag_from_search_page = Instagram::API::Tag->fromSearchPage({ media_count => 1, name => 'test_tag', id => 1234567890 });
+is($tag_from_search_page->{mediaCount}, 1);
+is($tag_from_search_page->{name}, 'test_tag');
+is($tag_from_search_page->{id}, 1234567890);
 
 #########################
 

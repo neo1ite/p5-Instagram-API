@@ -9,8 +9,25 @@ use utf8;
 use strict;
 use warnings;
 
+use Scalar::Util qw/blessed/;
+
 use Test::More qw(no_plan);
 BEGIN { use_ok('Instagram::API::Location') };
+
+my $location = Instagram::API::Location->new();
+
+ok(blessed($location) && $location->isa('Instagram::API::Location'));
+
+ok(exists($location->{id}));
+ok(exists($location->{name}));
+ok(exists($location->{lat}));
+ok(exists($location->{lng}));
+
+my $maked_location = Instagram::API::Location->makeLocation({ id => 1, name => 'test_tag', lat => 45.4081687, lng => -123.0079566 });
+is($maked_location->{id}, 1);
+is($maked_location->{name}, 'test_tag');
+is($maked_location->{lat}, 45.4081687);
+is($maked_location->{lng}, -123.0079566);
 
 #########################
 
