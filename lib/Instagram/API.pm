@@ -45,7 +45,7 @@ sub getAccount
 {
     my ($self, $username) = @_;
 
-    my $response = $self->{browser}->get(Instagram::API::Endpoints->getAccountJsonLink($username));
+    my $response = $self->{browser}->get(Instagram::API::Endpoints::getAccountJsonLink($username));
     if ($response->code == 404) {
         #throw new InstagramNotFoundException('Account with given username does not exist.');
         carp 'Account with given username does not exist.';
@@ -72,7 +72,7 @@ sub getAccountById
         carp 'User id must be integer or integer wrapped in string';
     }
 
-    my $parameters = Instagram::API::Endpoints->getAccountJsonInfoLinkByAccountId($id);
+    my $parameters = Instagram::API::Endpoints::getAccountJsonInfoLinkByAccountId($id);
     my $userArray = decode_json($self->_getContentsFromUrl($parameters));
 
     if ($userArray->{'status'} == 'fail') {
@@ -151,7 +151,7 @@ sub getMedias
     my $isMoreAvailable = 1;
 
     while ($index < $count && $isMoreAvailable) {
-        my $response = $self->{browser}->get(Instagram::API::Endpoints->getAccountMediasJsonLink($username, $maxId));
+        my $response = $self->{browser}->get(Instagram::API::Endpoints::getAccountMediasJsonLink($username, $maxId));
         if ($response->code != 200) {
             #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
             carp 'Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.';
@@ -196,7 +196,7 @@ sub getPaginateMedias
         'hasNextPage' => $hasNextPage
     };
 
-    my $response = $self->{browser}->get(Instagram::API::Endpoints->getAccountMediasJsonLink($username, $maxId));
+    my $response = $self->{browser}->get(Instagram::API::Endpoints::getAccountMediasJsonLink($username, $maxId));
 
     if ($response->code != 200) {
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
@@ -234,7 +234,7 @@ sub getMediaByCode
 {
     my ($self, $mediaCode) = @_;
 
-    return $self->getMediaByUrl(Instagram::API::Endpoints->getMediaPageLink($mediaCode));
+    return $self->getMediaByUrl(Instagram::API::Endpoints::getMediaPageLink($mediaCode));
 }
 
 sub getMediaByUrl
@@ -259,7 +259,7 @@ sub getMediaByUrl
     }
 
     my $mediaArray = decode_json($response->content);
-    
+
     if (!exists($mediaArray->{'media'})) {
         #throw new InstagramException('Media with this code does not exist');
         carp 'Media with this code does not exist';
@@ -279,7 +279,7 @@ sub getMediasByTag
     my $hasNextPage = 1;
 
     while ($index < $count && $hasNextPage) {
-        my $response = $self->{browser}->get(Instagram::API::Endpoints->getMediasJsonByTagLink($tag, $maxId));
+        my $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByTagLink($tag, $maxId));
         if ($response->code != 200) {
             #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
             carp 'Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.';
@@ -325,7 +325,7 @@ sub getPaginateMediasByTag
         'hasNextPage' => $hasNextPage
     };
 
-    my $response = $self->{browser}->get(Instagram::API::Endpoints->getMediasJsonByTagLink($tag, $maxId));
+    my $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByTagLink($tag, $maxId));
 
     if ($response->code != 200) {
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
@@ -369,7 +369,7 @@ sub searchAccountsByUsername
 {
     my ($self, $username) = @_;
 
-    my $response = $self->{browser}->get(Instagram::API::Endpoints->getGeneralSearchJsonLink($username));
+    my $response = $self->{browser}->get(Instagram::API::Endpoints::getGeneralSearchJsonLink($username));
 
     if ($response->code == 404) {
         #throw new InstagramNotFoundException('Account with given username does not exist.');
@@ -402,7 +402,7 @@ sub searchTagsByTagName
 {
     my ($self, $tag) = @_;
 
-    my $response = $self->{browser}->get(Instagram::API::Endpoints->getGeneralSearchJsonLink($tag));
+    my $response = $self->{browser}->get(Instagram::API::Endpoints::getGeneralSearchJsonLink($tag));
 
     if ($response->code == 404) {
         #throw new InstagramNotFoundException('Account with given username does not exist.');
@@ -436,7 +436,7 @@ sub getTopMediasByTagName
 {
     my ($self, $tagName) = @_;
 
-    my $response = $self->{browser}->get(Instagram::API::Endpoints->getMediasJsonByTagLink($tagName, ''));
+    my $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByTagLink($tagName, ''));
 
     if ($response->code == 404) {
         #throw new InstagramNotFoundException('Account with given username does not exist.');
@@ -500,9 +500,9 @@ sub getMediaCommentsByCode
 
         my $parameters;
         if (!isset($maxId)) {
-            $parameters = Instagram::API::Endpoints->getLastCommentsByCodeLink($code, $numberOfCommentsToRetreive);
+            $parameters = Instagram::API::Endpoints::getLastCommentsByCodeLink($code, $numberOfCommentsToRetreive);
         } else {
-            $parameters = Instagram::API::Endpoints->getCommentsBeforeCommentIdByCode($code, $numberOfCommentsToRetreive, $maxId);
+            $parameters = Instagram::API::Endpoints::getCommentsBeforeCommentIdByCode($code, $numberOfCommentsToRetreive, $maxId);
         }
 
         my $jsonResponse = decode_json($self->_getContentsFromUrl($parameters));
@@ -532,7 +532,7 @@ sub getLocationTopMediasById
 {
     my ($self, $facebookLocationId) = @_;
 
-    my $response = $self->{browser}->get(Instagram::API::Endpoints->getMediasJsonByLocationIdLink($facebookLocationId));
+    my $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByLocationIdLink($facebookLocationId));
 
     if ($response->code == 404) {
         #throw new InstagramNotFoundException('Location with this id doesn\'t exist');
@@ -566,7 +566,7 @@ sub getLocationMediasById
     my $hasNext = 1;
 
     while ($index < $quantity && $hasNext) {
-        my $response = $self->{browser}->get(Instagram::API::Endpoints->getMediasJsonByLocationIdLink($facebookLocationId, $offset));
+        my $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByLocationIdLink($facebookLocationId, $offset));
 
         if ($response->code != 200) {
             #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
@@ -599,7 +599,7 @@ sub getLocationById
 {
     my ($self, $facebookLocationId) = @_;
 
-    my $response = $self->{browser}->get(Instagram::API::Endpoints->getMediasJsonByLocationIdLink($facebookLocationId));
+    my $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByLocationIdLink($facebookLocationId));
 
     if ($response->code == 404) {
         #throw new InstagramNotFoundException('Location with this id doesn\'t exist');

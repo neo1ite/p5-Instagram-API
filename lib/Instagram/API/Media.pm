@@ -5,8 +5,10 @@ use strict;
 use warnings;
 use autouse 'Data::Dumper';
 
+use URI;
 use Scalar::Util qw/blessed/;
 use Instagram::API::Endpoints;
+use Instagram::API::Account;
 
 sub new {
     my ($invocant, $params) = @_;
@@ -90,12 +92,12 @@ sub _getImageUrls
 {
     my ($self, $imageUrl) = @_;
 
-    my $imageName = (split('/', parse_url($imageUrl)->{'path'}))[-1];
+    my $imageName = (split('/', URI->new($imageUrl)->path))[-1];
     my $urls = {
-        'thumbnail' => Instagram::API::Media::INSTAGRAM_CDN_URL() . 't/s150x150/' . $imageName,
-        'low'       => Instagram::API::Media::INSTAGRAM_CDN_URL() . 't/s320x320/' . $imageName,
-        'standard'  => Instagram::API::Media::INSTAGRAM_CDN_URL() . 't/s640x640/' . $imageName,
-        'high'      => Instagram::API::Media::INSTAGRAM_CDN_URL() . 't/'          . $imageName
+        'thumbnail' => Instagram::API::Endpoints::INSTAGRAM_CDN_URL() . 't/s150x150/' . $imageName,
+        'low'       => Instagram::API::Endpoints::INSTAGRAM_CDN_URL() . 't/s320x320/' . $imageName,
+        'standard'  => Instagram::API::Endpoints::INSTAGRAM_CDN_URL() . 't/s640x640/' . $imageName,
+        'high'      => Instagram::API::Endpoints::INSTAGRAM_CDN_URL() . 't/'          . $imageName
     };
 
     return $urls;
@@ -126,7 +128,7 @@ sub fromMediaPage
 
     $self->{createdTime}   = $mediaArray->{'date'};
     $self->{code}          = $mediaArray->{'code'};
-    $self->{link}          = Instagram::API::Media->getMediaPageLink($self->{code});
+    $self->{link}          = Instagram::API::Endpoints->getMediaPageLink($self->{code});
     $self->{commentsCount} = $mediaArray->{'comments'}{'count'};
     $self->{likesCount}    = $mediaArray->{'likes'}{'count'};
 
@@ -135,16 +137,20 @@ sub fromMediaPage
     $self->{imageLowResolutionUrl} = $images->{'low'};
     $self->{imageHighResolutionUrl} = $images->{'high'};
     $self->{imageThumbnailUrl} = $images->{'thumbnail'};
+
     if (exists($mediaArray->{'caption'})) {
         $self->{caption} = $mediaArray->{'caption'};
     }
+
     if (exists($mediaArray->{'location'}{'id'})) {
         $self->{locationId} = $mediaArray->{'location'}{'id'};
     }
+
     if (exists($mediaArray->{'location'}{'name'})) {
         $self->{locationName} = $mediaArray->{'location'}{'name'};
     }
-    $self->{owner} = Account::fromMediaPage($mediaArray->{'owner'});
+    
+    $self->{owner} = Instagram::API::Account->fromMediaPage($mediaArray->{'owner'});
 
     return $self;
 }
@@ -205,7 +211,7 @@ sub getLinkFromId
 
     my $code = $self->getCodeFromId($id);
 
-    return Endpoints::getMediaPageLink($code);
+    return Instagram::API::Endpoints::getMediaPageLink($code);
 }
 
 sub getCodeFromId

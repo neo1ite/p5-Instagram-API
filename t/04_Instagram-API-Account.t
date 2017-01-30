@@ -30,7 +30,7 @@ ok(exists($user->{mediaCount}));
 ok(exists($user->{isPrivate}));
 ok(exists($user->{isVerified}));
 
-my $comment_from_api = Instagram::API::Account->fromAccountPage({
+my $user_from_account_page = Instagram::API::Account->fromAccountPage({
     id              => 1234567890,
     username        => 'ne01ite',
     full_name       => 'Neolite',
@@ -44,17 +44,49 @@ my $comment_from_api = Instagram::API::Account->fromAccountPage({
     is_verified     => 0,
 });
 
-is($comment_from_api->{id}, 1234567890);
-is($comment_from_api->{username}, 'ne01ite');
-is($comment_from_api->{fullName}, 'Neolite');
-is($comment_from_api->{profilePicUrl}, 'https://scontent-mia1-1.cdninstagram.com/t51.2885-19/11906329_960233084022564_1448528159_a.jpg');
-is($comment_from_api->{biography}, undef);
-is($comment_from_api->{externalUrl}, 'http://www.neolite.ru/');
-is($comment_from_api->{followsCount}, 4);
-is($comment_from_api->{followedByCount}, 10);
-is($comment_from_api->{mediaCount}, 0);
-is($comment_from_api->{isPrivate}, 0);
-is($comment_from_api->{isVerified}, 0);
+is($user_from_account_page->{id}, 1234567890);
+is($user_from_account_page->{username}, 'ne01ite');
+is($user_from_account_page->{fullName}, 'Neolite');
+is($user_from_account_page->{profilePicUrl}, 'https://scontent-mia1-1.cdninstagram.com/t51.2885-19/11906329_960233084022564_1448528159_a.jpg');
+is($user_from_account_page->{biography}, undef);
+is($user_from_account_page->{externalUrl}, 'http://www.neolite.ru/');
+is($user_from_account_page->{followsCount}, 4);
+is($user_from_account_page->{followedByCount}, 10);
+is($user_from_account_page->{mediaCount}, 0);
+is($user_from_account_page->{isPrivate}, 0);
+is($user_from_account_page->{isVerified}, 0);
+
+my $user_from_media_page = Instagram::API::Account->fromMediaPage({
+    id              => 1234567890,
+    username        => 'ne01ite',
+    full_name       => 'Neolite',
+    profile_pic_url => 'https://scontent-mia1-1.cdninstagram.com/t51.2885-19/11906329_960233084022564_1448528159_a.jpg',
+    is_private      => 0,
+});
+
+is($user_from_media_page->{id}, 1234567890);
+is($user_from_media_page->{username}, 'ne01ite');
+is($user_from_media_page->{fullName}, 'Neolite');
+is($user_from_media_page->{profilePicUrl}, 'https://scontent-mia1-1.cdninstagram.com/t51.2885-19/11906329_960233084022564_1448528159_a.jpg');
+is($user_from_media_page->{isPrivate}, 0);
+
+my $user_from_search_page = Instagram::API::Account->fromSearchPage({
+    pk              => 1234567890,
+    username        => 'ne01ite',
+    full_name       => 'Neolite',
+    profile_pic_url => 'https://scontent-mia1-1.cdninstagram.com/t51.2885-19/11906329_960233084022564_1448528159_a.jpg',
+    follower_count  => 100,
+    is_private      => 1,
+    is_verified     => 1,
+});
+
+is($user_from_search_page->{id}, 1234567890);
+is($user_from_search_page->{username}, 'ne01ite');
+is($user_from_search_page->{fullName}, 'Neolite');
+is($user_from_search_page->{profilePicUrl}, 'https://scontent-mia1-1.cdninstagram.com/t51.2885-19/11906329_960233084022564_1448528159_a.jpg');
+is($user_from_search_page->{followedByCount}, 100);
+is($user_from_search_page->{isPrivate}, 1);
+is($user_from_search_page->{isVerified}, 1);
 
 #########################
 
