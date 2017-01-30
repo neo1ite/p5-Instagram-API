@@ -1,6 +1,8 @@
 Changes
 Makefile.PL
 MANIFEST
-README
-t/Instagram-API.t
+README.pod
+t/01_Instagram-API.t
+t/02_Instagram-API-Endpoints.t
 lib/Instagram/API.pm
+lib/Instagram/API/Endpoints.pm

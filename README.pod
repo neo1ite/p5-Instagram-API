@@ -1,3 +1,12 @@
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+Instagram::API - Perl OO Interface to Instagram REST API without any authorization
+
+
 Instagram-API version 0.01
 ==========================
 
@@ -36,5 +45,3 @@ Copyright (C) 2017 by A. U. Thor
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.22.2 or,
 at your option, any later version of Perl 5 you may have available.
-
-
