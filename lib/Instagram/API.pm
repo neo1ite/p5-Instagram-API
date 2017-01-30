@@ -1,6 +1,6 @@
 package Instagram::API;
 
-use 5.016;
+use utf8;
 use strict;
 use warnings;
 use autouse 'Data::Dumper';
@@ -158,7 +158,7 @@ sub getMedias
             if ($index == $count) {
                 return $medias;
             }
-            push @{$medias}, Media::fromApi($mediaArray);
+            push @{$medias}, Instagram::API::Media->fromApi($mediaArray);
             $index++;
         }
         if (@{$arr->{'items'}} == 0) {
@@ -204,7 +204,7 @@ sub getPaginateMedias
     }
 
     foreach my $mediaArray (@{$arr->{'items'}}) {
-        push @{$medias}, Media::fromApi($mediaArray);
+        push @{$medias}, Instagram::API::Media->fromApi($mediaArray);
     }
 
     $maxId = $arr->{'items'}[-1]{'id'};
@@ -249,7 +249,7 @@ sub getMediaByUrl
         carp 'Media with this code does not exist';
     }
 
-    return Media::fromMediaPage($mediaArray->{'media'});
+    return Instagram::API::Media->fromMediaPage($mediaArray->{'media'});
 }
 
 sub getMediasByTag
@@ -282,7 +282,7 @@ sub getMediasByTag
             if ($index == $count) {
                 return $medias;
             }
-            push @{$medias}, Media::fromTagPage($mediaArray);
+            push @{$medias}, Instagram::API::Media->fromTagPage($mediaArray);
             $index++;
         }
         if (@{$nodes} == 0) {
@@ -334,7 +334,7 @@ sub getPaginateMediasByTag
     }
 
     foreach my $mediaArray (@{$nodes}) {
-        push @{$medias}, Media::fromTagPage($mediaArray);
+        push @{$medias}, Instagram::API::Media->fromTagPage($mediaArray);
     }
 
     $maxId       = $arr->{'tag'}{'media'}{'page_info'}{'end_cursor'};
@@ -436,7 +436,7 @@ sub getTopMediasByTagName
 
     my $medias = [];
     foreach my $mediaArray (@{$jsonResponse->{'tag'}{'top_posts'}{'nodes'}}) {
-        push @{$medias}, Media::fromTagPage($mediaArray);
+        push @{$medias}, Instagram::API::Media->fromTagPage($mediaArray);
     }
 
     return $medias;
@@ -445,7 +445,7 @@ sub getTopMediasByTagName
 sub getMediaById
 {
     my ($self, $mediaId) = @_;
-    my $mediaLink = Media::getLinkFromId($mediaId);
+    my $mediaLink = Media::Instagram::API::Media->getLinkFromId($mediaId);
 
     return $self->getMediaByUrl($mediaLink);
 }
@@ -455,7 +455,7 @@ sub getMediaCommentsById
     my ($self, $mediaId, $count, $maxId) = @_;
     $count //= 10;
 
-    my $code = Media::getCodeFromId($mediaId);
+    my $code = Instagram::API::Media->getCodeFromId($mediaId);
 
     return $self->getMediaCommentsByCode($code, $count, $maxId);
 }
@@ -533,7 +533,7 @@ sub getLocationTopMediasById
     my $medias = [];
 
     foreach my $mediaArray ($nodes) {
-        push @{$medias}, Media::fromTagPage($mediaArray);
+        push @{$medias}, Instagram::API::Media->fromTagPage($mediaArray);
     }
 
     return $medias;
@@ -564,7 +564,7 @@ sub getLocationMediasById
             if ($index == $quantity) {
                 return $medias;
             }
-            push @{$medias}, Media::fromTagPage($mediaArray);
+            push @{$medias}, Instagram::API::Media->fromTagPage($mediaArray);
             $index++;
         }
 
