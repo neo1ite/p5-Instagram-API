@@ -4,5 +4,15 @@ MANIFEST
 README.pod
 t/01_Instagram-API.t
 t/02_Instagram-API-Endpoints.t
+t/03_Instagram-API-Media.t
+t/04_Instagram-API-Account.t
+t/05_Instagram-API-Comment.t
+t/06_Instagram-API-Location.t
+t/07_Instagram-API-Tag.t
 lib/Instagram/API.pm
 lib/Instagram/API/Endpoints.pm
+lib/Instagram/API/Media.pm
+lib/Instagram/API/Account.pm
+lib/Instagram/API/Comment.pm
+lib/Instagram/API/Location.pm
+lib/Instagram/API/Tag.pm

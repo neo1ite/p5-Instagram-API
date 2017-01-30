@@ -6,7 +6,7 @@ use warnings;
 use autouse 'Data::Dumper';
 
 use Scalar::Util qw/blessed/;
-#use Instagram::API::Endpoints;
+use Instagram::API::Endpoints;
 
 sub new {
     my ($invocant, $params) = @_;
@@ -92,10 +92,10 @@ sub _getImageUrls
 
     my $imageName = (split('/', parse_url($imageUrl)->{'path'}))[-1];
     my $urls = {
-        'thumbnail' => Instagram::API::Media::INSTAGRAM_CDN_URL . 't/s150x150/' . $imageName,
-        'low'       => Instagram::API::Media::INSTAGRAM_CDN_URL . 't/s320x320/' . $imageName,
-        'standard'  => Instagram::API::Media::INSTAGRAM_CDN_URL . 't/s640x640/' . $imageName,
-        'high'      => Instagram::API::Media::INSTAGRAM_CDN_URL . 't/'          . $imageName
+        'thumbnail' => Instagram::API::Media::INSTAGRAM_CDN_URL() . 't/s150x150/' . $imageName,
+        'low'       => Instagram::API::Media::INSTAGRAM_CDN_URL() . 't/s320x320/' . $imageName,
+        'standard'  => Instagram::API::Media::INSTAGRAM_CDN_URL() . 't/s640x640/' . $imageName,
+        'high'      => Instagram::API::Media::INSTAGRAM_CDN_URL() . 't/'          . $imageName
     };
 
     return $urls;
