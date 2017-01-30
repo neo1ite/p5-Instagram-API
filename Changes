@@ -1,0 +1,6 @@
+Revision history for Perl extension Instagram::API.
+
+0.01  Mon Jan 30 12:30:56 2017
+	- original version; created by h2xs 1.23 with options
+		-X -A -n Instagram::API
+

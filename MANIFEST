@@ -1,0 +1,6 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+t/Instagram-API.t
+lib/Instagram/API.pm
