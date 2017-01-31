@@ -5,7 +5,10 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     NAME              => 'Instagram::API',
     VERSION_FROM      => 'lib/Instagram/API.pm', # finds $VERSION, requires EU::MM from perl >= 5.5
-    PREREQ_PM         => {}, # e.g., Module::Name => 1.1
+    PREREQ_PM         => {
+        'JSON::MaybeXS'       => 0,
+        'Data::Validate::URI' => 0,
+    }, # e.g., Module::Name => 1.1
     ABSTRACT_FROM     => 'lib/Instagram/API.pm', # retrieve abstract from module
     AUTHOR            => 'A. U. Thor <a.u.thor@a.galaxy.far.far.away>',
     #LICENSE           => 'perl',

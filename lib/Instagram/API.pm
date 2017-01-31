@@ -6,11 +6,9 @@ use warnings;
 use autouse 'Data::Dumper';
 
 use Carp;
-use Try::Tiny;
 use JSON::MaybeXS;
 use LWP::UserAgent;
 use Data::Validate::URI qw(is_uri);
-use lib '..';
 use Instagram::API::Endpoints;
 use Instagram::API::Media;
 
