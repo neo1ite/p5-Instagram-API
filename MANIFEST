@@ -1,7 +1,6 @@
 Changes
 Makefile.PL
 MANIFEST
-LICENSE
 README.pod
 t/00_compile.t
 t/00_strict.t

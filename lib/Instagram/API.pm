@@ -10,6 +10,7 @@ use Try::Tiny;
 use JSON::MaybeXS;
 use LWP::UserAgent;
 use Data::Validate::URI qw(is_uri);
+use lib '..';
 use Instagram::API::Endpoints;
 use Instagram::API::Media;
 
@@ -31,7 +32,7 @@ our $VERSION = '0.01';
 
 use constant MAX_COMMENTS_PER_REQUEST => 300;
 
-sub new {
+sub new($;$) {
     my ($invocant, $params) = @_;
 
     my $class = ref($invocant) || $invocant;
@@ -44,7 +45,7 @@ sub new {
     return $self;
 }
 
-sub getAccount
+sub getAccount($$)
 {
     my ($self, $username) = @_;
 
@@ -66,7 +67,7 @@ sub getAccount
     return Instagram::API::Account->fromAccountPage($userArray->{'user'});
 }
 
-sub getAccountById
+sub getAccountById($$)
 {
     my ($self, $id) = @_;
 
@@ -91,7 +92,7 @@ sub getAccountById
     return Instagram::API::Account->fromAccountPage($userArray);
 }
 
-sub _getContentsFromUrl
+sub _getContentsFromUrl($$)
 {
     my ($self, $parameters) = @_;
 
@@ -129,7 +130,7 @@ sub _getContentsFromUrl
     return $response->content;
 }
 
-sub _generateRandomString
+sub _generateRandomString($;$)
 {
     my ($self, $length) = @_;
     $length //= 10;
@@ -193,7 +194,7 @@ sub getMedias($$;$$)
     return $medias;
 }
 
-sub getPaginateMedias
+sub getPaginateMedias($$;$)
 {
     my ($self, $username, $maxId) = @_;
     $maxId //= '';
@@ -241,14 +242,14 @@ sub getPaginateMedias
     return $toReturn;
 }
 
-sub getMediaByCode
+sub getMediaByCode($$)
 {
     my ($self, $mediaCode) = @_;
 
     return $self->getMediaByUrl(Instagram::API::Endpoints::getMediaPageLink($mediaCode));
 }
 
-sub getMediaByUrl
+sub getMediaByUrl($$)
 {
     my ($self, $mediaUrl) = @_;
 
@@ -279,7 +280,7 @@ sub getMediaByUrl
     return Instagram::API::Media->fromMediaPage($mediaArray->{'media'});
 }
 
-sub getMediasByTag
+sub getMediasByTag($$;$$)
 {
     my ($self, $tag, $count, $maxId) = @_;
     $count //= 12;
@@ -291,20 +292,25 @@ sub getMediasByTag
 
     while ($index < $count && $hasNextPage) {
         my $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByTagLink($tag, $maxId));
+
         if ($response->code != 200) {
             #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
             croak 'Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.';
         }
 
         my $arr = decode_json($response->content);
-        if (ref($arr) ne 'ARRAY') {
+
+        if (ref($arr) ne 'HASH') {
             #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
             croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
         }
-        if (@{$arr->{'tag'}{'media'}{'count'}} == 0) {
+
+        if ($arr->{'tag'}{'media'}{'count'} == 0) {
             return [];
         }
+
         my $nodes = $arr->{'tag'}{'media'}{'nodes'};
+
         foreach my $mediaArray (@{$nodes}) {
             if ($index == $count) {
                 return $medias;
@@ -312,17 +318,19 @@ sub getMediasByTag
             push @{$medias}, Instagram::API::Media->fromTagPage($mediaArray);
             $index++;
         }
+
         if (@{$nodes} == 0) {
             return $medias;
         }
-        $maxId = $arr->{'tag'}{'media'}{'page_info'}{'end_cursor'};
+
+        $maxId       = $arr->{'tag'}{'media'}{'page_info'}{'end_cursor'};
         $hasNextPage = $arr->{'tag'}{'media'}{'page_info'}{'has_next_page'};
     }
 
     return $medias;
 }
 
-sub getPaginateMediasByTag
+sub getPaginateMediasByTag($$;$)
 {
     my ($self, $tag, $maxId) = @_;
     $maxId //= '';
@@ -376,7 +384,7 @@ sub getPaginateMediasByTag
     return $toReturn;
 }
 
-sub searchAccountsByUsername
+sub searchAccountsByUsername($$)
 {
     my ($self, $username) = @_;
 
@@ -409,7 +417,7 @@ sub searchAccountsByUsername
     return $accounts;
 }
 
-sub searchTagsByTagName
+sub searchTagsByTagName($$)
 {
     my ($self, $tag) = @_;
 
@@ -443,7 +451,7 @@ sub searchTagsByTagName
     return $hashtags;
 }
 
-sub getTopMediasByTagName
+sub getTopMediasByTagName($$)
 {
     my ($self, $tagName) = @_;
 
@@ -469,7 +477,7 @@ sub getTopMediasByTagName
     return $medias;
 }
 
-sub getMediaById
+sub getMediaById($$)
 {
     my ($self, $mediaId) = @_;
     my $mediaLink = Media::Instagram::API::Media->getLinkFromId($mediaId);
@@ -477,7 +485,7 @@ sub getMediaById
     return $self->getMediaByUrl($mediaLink);
 }
 
-sub getMediaCommentsById
+sub getMediaCommentsById($$;$$)
 {
     my ($self, $mediaId, $count, $maxId) = @_;
     $count //= 10;
@@ -487,7 +495,7 @@ sub getMediaCommentsById
     return $self->getMediaCommentsByCode($code, $count, $maxId);
 }
 
-sub getMediaCommentsByCode
+sub getMediaCommentsByCode($$;$$)
 {
     my ($self, $code, $count, $maxId) = @_;
     $count //= 10;
@@ -539,7 +547,7 @@ sub getMediaCommentsByCode
     return $comments;
 }
 
-sub getLocationTopMediasById
+sub getLocationTopMediasById($$)
 {
     my ($self, $facebookLocationId) = @_;
 
@@ -566,14 +574,14 @@ sub getLocationTopMediasById
     return $medias;
 }
 
-sub getLocationMediasById
+sub getLocationMediasById($$;$$)
 {
     my ($self, $facebookLocationId, $quantity, $offset) = @_;
     $quantity //= 12;
-    $offset //= '';
+    $offset   //= '';
 
-    my $index = 0;
-    my $medias = [];
+    my $index   = 0;
+    my $medias  = [];
     my $hasNext = 1;
 
     while ($index < $quantity && $hasNext) {
@@ -606,7 +614,7 @@ sub getLocationMediasById
     return $medias;
 }
 
-sub getLocationById
+sub getLocationById($$)
 {
     my ($self, $facebookLocationId) = @_;
 

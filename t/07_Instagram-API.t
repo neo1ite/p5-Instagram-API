@@ -23,7 +23,7 @@ ok(blessed($instagram->{browser}) && $instagram->{browser}->isa('LWP::UserAgent'
 my $r = $instagram->{browser}->get('https://www.instagram.com/');
 
 SKIP: {
-    skip 'No connection with Instragram.com', 9 + (20 * 19) unless ($r && $r->code == 200);
+    skip 'No connection with Instragram.com', 10 + (20 * 19) + (14 * 20) unless ($r && $r->code == 200);
 
     my $user_by_name = $instagram->getAccount('ne01ite');
     ok(blessed($user_by_name) && $user_by_name->isa('Instagram::API::Account'), 'Getting account by name #1');
@@ -47,16 +47,14 @@ SKIP: {
                 && $empty_media_by_user->[-1]->isa('Instagram::API::Media')
             )
         ),
-        'Getting user medias #1'
+        'Getting none user medias'
     );
 
-    my $media_by_user = $instagram->getMedias('realdonaldtrump');
-
-    ok(ref($media_by_user) eq 'ARRAY' && @{$media_by_user}, 'Getting user medias #2');
-    ok(@{$media_by_user} == 20, 'Getting user medias #3');
+    my $medias_by_user = $instagram->getMedias('realdonaldtrump');
+    is(@{$medias_by_user // []}, 20, 'Getting user medias');
 
     my $i = 1;
-    foreach my $media (@{$media_by_user}) {
+    foreach my $media (@{$medias_by_user}) {
         ok(blessed($media) && $media->isa('Instagram::API::Media'), 'Checking media object #' . $i);
         ok(exists($media->{id}));
         ok(exists($media->{code}));
@@ -81,6 +79,30 @@ SKIP: {
         $i++;
     }
 
+    is(scalar(@{$instagram->getMediasByTag('russia')     // []}), 12, 'Getting medias by tag');
+    is(scalar(@{$instagram->getMediasByTag('россия', 20) // []}), 20, 'Getting medias by national tag with count param');
+
+    $i = 1;
+    foreach my $media (@{$instagram->getMediasByTag('россия', 20)}) {
+        ok(blessed($media) && $media->isa('Instagram::API::Media'), 'Checking media object #' . $i);
+        ok(exists($media->{id}));
+        ok(exists($media->{code}));
+        ok(exists($media->{link}));
+        ok(exists($media->{type}));
+        if ($media->{type} eq 'video') {
+            ok(exists($media->{videoViews}));
+        }
+        ok(exists($media->{createdTime}));
+
+        ok(exists($media->{commentsCount}));
+        ok(exists($media->{likesCount}));
+        ok(exists($media->{imageThumbnailUrl}));
+        ok(exists($media->{imageLowResolutionUrl}));
+        ok(exists($media->{imageStandardResolutionUrl}));
+        ok(exists($media->{imageHighResolutionUrl}));
+        ok(exists($media->{caption}));
+        $i++;
+    }
 };
 
 #########################
