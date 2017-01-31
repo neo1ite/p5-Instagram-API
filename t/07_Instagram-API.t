@@ -23,7 +23,7 @@ ok(blessed($instagram->{browser}) && $instagram->{browser}->isa('LWP::UserAgent'
 my $r = $instagram->{browser}->get('https://www.instagram.com/');
 
 SKIP: {
-    skip 'No connection with Instragram.com', 6 unless ($r && $r->code == 200);
+    skip 'No connection with Instragram.com', 8 + (20 * 19) unless ($r && $r->code == 200);
 
     my $user_by_name = $instagram->getAccount('ne01ite');
     ok(blessed($user_by_name) && $user_by_name->isa('Instagram::API::Account'), 'Getting account by name #1');
@@ -35,10 +35,53 @@ SKIP: {
     ok(blessed($user_by_id) && $user_by_id->isa('Instagram::API::Account'), 'Getting account by ID');
     is($user_by_id->{id},       '1838386734', 'Getting account by name #2');
     is($user_by_id->{username}, 'ne01ite',    'Getting account by name #3');
+
+    my $empty_media_by_user = $instagram->getMedias('ne01ite');
+
+    ok(
+        ref($empty_media_by_user) eq 'ARRAY'
+        && (
+            !@{$empty_media_by_user}
+            || (
+                blessed($empty_media_by_user->[-1])
+                && $empty_media_by_user->[-1]->isa('Instagram::API::Media')
+            )
+        ),
+        'Getting user medias #1'
+    );
+
+    my $media_by_user = $instagram->getMedias('realdonaldtrump');
+
+    ok(ref($media_by_user) eq 'ARRAY' && @{$media_by_user}, 'Getting user medias #2');
+    my $i = 1;
+    foreach my $media (@{$media_by_user}) {
+        ok(blessed($media) && $media->isa('Instagram::API::Media'), 'Checking media object #' . $i);
+        ok(exists($media->{id}));
+        ok(exists($media->{code}));
+        ok(exists($media->{type}));
+        if ($media->{type} eq 'video') {
+            ok(exists($media->{videoViews}));
+            ok(exists($media->{videoLowResolutionUrl}));
+            ok(exists($media->{videoStandardResolutionUrl}));
+            ok(exists($media->{videoLowBandwidthUrl}));
+        }
+        ok(exists($media->{createdTime}));
+        ok(exists($media->{link}));
+        ok(exists($media->{commentsCount}));
+        ok(exists($media->{likesCount}));
+        ok(exists($media->{imageThumbnailUrl}));
+        ok(exists($media->{imageLowResolutionUrl}));
+        ok(exists($media->{imageStandardResolutionUrl}));
+        ok(exists($media->{imageHighResolutionUrl}));
+        ok(exists($media->{caption}));
+        ok(exists($media->{locationId}));
+        ok(exists($media->{locationName}));
+        $i++;
+    }
+
 };
 
 #########################
 
 # Insert your test code below, the Test::More module is use()ed here so read
 # its man page ( perldoc Test::More ) for help writing this test script.
-

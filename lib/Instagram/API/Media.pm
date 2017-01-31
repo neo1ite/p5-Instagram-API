@@ -67,7 +67,7 @@ sub fromApi
         $self->{caption} = $mediaArray->{'caption'}{'text'};
     }
 
-    if ($self->{type} == 'video') {
+    if ($self->{type} eq 'video') {
         if (exists($mediaArray->{'video_views'})) {
             $self->{videoViews} = $mediaArray->{'video_views'};
         }
@@ -149,7 +149,7 @@ sub fromMediaPage
     if (exists($mediaArray->{'location'}{'name'})) {
         $self->{locationName} = $mediaArray->{'location'}{'name'};
     }
-    
+
     $self->{owner} = Instagram::API::Account->fromMediaPage($mediaArray->{'owner'});
 
     return $self;
