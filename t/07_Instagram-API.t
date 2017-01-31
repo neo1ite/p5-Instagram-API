@@ -23,7 +23,7 @@ ok(blessed($instagram->{browser}) && $instagram->{browser}->isa('LWP::UserAgent'
 my $r = $instagram->{browser}->get('https://www.instagram.com/');
 
 SKIP: {
-    skip 'No connection with Instragram.com', 8 + (20 * 19) unless ($r && $r->code == 200);
+    skip 'No connection with Instragram.com', 9 + (20 * 19) unless ($r && $r->code == 200);
 
     my $user_by_name = $instagram->getAccount('ne01ite');
     ok(blessed($user_by_name) && $user_by_name->isa('Instagram::API::Account'), 'Getting account by name #1');
@@ -53,6 +53,8 @@ SKIP: {
     my $media_by_user = $instagram->getMedias('realdonaldtrump');
 
     ok(ref($media_by_user) eq 'ARRAY' && @{$media_by_user}, 'Getting user medias #2');
+    ok(@{$media_by_user} == 20, 'Getting user medias #3');
+
     my $i = 1;
     foreach my $media (@{$media_by_user}) {
         ok(blessed($media) && $media->isa('Instagram::API::Media'), 'Checking media object #' . $i);

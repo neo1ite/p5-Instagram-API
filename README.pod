@@ -16,14 +16,15 @@ version 0.01
 
 	my $instagram = Instagram::API->new();
 
-	# Authenticated user feed
-	my $my_user = $instagram->user;
-	my $feed    = $my_user->feed( count => 5 );
+	my $user = $instagram->getAccount($username);
+	my $user = $instagram->getAccountById($userID);
 
-	for my $media ( @$feed ) {
+	my $medias = $instagram->getMedias($username, $count, $maxID);
 
-		printf "Caption: %s\n", $media->caption;
-		printf "Posted by %s at %s (%d likes)\n\n", $media->user->username, $media->created_time, $media->likes;
+	for my $media ( @{$medias} ) {
+
+		printf "Caption: %s\n", $media->{caption};
+		printf "Posted by %s at %s (%d likes)\n\n", $media->user->{username}, $media->{created_time}, $media->{likes};
 
 	}
 
