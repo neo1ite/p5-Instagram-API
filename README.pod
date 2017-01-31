@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-Instagram::API - Perl OO Interface to Instagram REST API without any authorization
+Instagram::API - Perl OO interface to Instagram without any authorization
 
 =head1 VERSION
 
