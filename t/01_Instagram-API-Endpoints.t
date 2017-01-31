@@ -8,6 +8,7 @@
 use utf8;
 use strict;
 use warnings;
+use autouse 'Data::Dumper';
 
 use Test::More qw(no_plan);
 BEGIN { use_ok('Instagram::API::Endpoints') };

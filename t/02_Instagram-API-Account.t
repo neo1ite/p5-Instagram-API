@@ -8,6 +8,7 @@
 use utf8;
 use strict;
 use warnings;
+use autouse 'Data::Dumper';
 
 use Scalar::Util qw/blessed/;
 

@@ -8,7 +8,10 @@ use autouse 'Data::Dumper';
 use Carp;
 use Try::Tiny;
 use JSON::MaybeXS;
+use LWP::UserAgent;
 use Data::Validate::URI qw(is_uri);
+use Instagram::API::Endpoints;
+use Instagram::API::Media;
 
 require Exporter;
 
@@ -32,7 +35,7 @@ sub new {
     my ($invocant, $params) = @_;
 
     my $class = ref($invocant) || $invocant;
-    my $self = {};
+    my $self = { %{$params // {}} };
     $self->{browser} ||= LWP::UserAgent->new();
 	carp 'Browser is not a LWP::UserAgent' unless $self->{browser}->isa('LWP::UserAgent');
 
