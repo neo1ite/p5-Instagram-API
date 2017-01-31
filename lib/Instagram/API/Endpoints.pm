@@ -168,6 +168,12 @@ Blah blah blah.
 
 =head3 getMediasJsonByTagLink
 
+=head1 CONSTANTS
+
+=head3 INSTAGRAM_QUERY_URL
+
+=head3 INSTAGRAM_CDN_URL
+
 =head1 SEE ALSO
 
 Mention other useful documentation such as the documentation of
