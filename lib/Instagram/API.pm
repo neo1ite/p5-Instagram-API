@@ -643,7 +643,10 @@ Instagram::API - Perl extension for blah blah blah
 =head1 SYNOPSIS
 
   use Instagram::API;
-  blah blah blah
+
+  my $instagram = Instagram::API->new();
+  my $user = $instagram->getAccount($username);
+  my $feed = $instagram->getMedias($username);
 
 =head1 DESCRIPTION
 
@@ -653,11 +656,43 @@ unedited.
 
 Blah blah blah.
 
-=head2 EXPORT
+=head2 METHODS
 
-None by default.
+=head3 new
 
+=head3 getAccount
 
+=head3 getAccountById
+
+=head3 getLocationById
+
+=head3 getLocationMediasById
+
+=head3 getLocationTopMediasById
+
+=head3 getMediaByCode
+
+=head3 getMediaById
+
+=head3 getMediaByUrl
+
+=head3 getMediaCommentsByCode
+
+=head3 getMediaCommentsById
+
+=head3 getMedias
+
+=head3 getMediasByTag
+
+=head3 getPaginateMedias
+
+=head3 getPaginateMediasByTag
+
+=head3 getTopMediasByTagName
+
+=head3 searchAccountsByUsername
+
+=head3 searchTagsByTagName
 
 =head1 SEE ALSO
 
