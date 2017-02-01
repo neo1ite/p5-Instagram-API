@@ -64,7 +64,10 @@ Sergey Kovalev <info@neolite.ru>
 
 Copyright (C) 2017 by Sergey Kovalev
 
-This is free software; you can redistribute it and/or modify it under
-the same terms as the Perl 5 programming language system itself.
+This program is free software; you can redistribute it and/or modify it
+under the terms of either: the GNU General Public License as published
+by the Free Software Foundation; or the Artistic License.
+
+See L<http://dev.perl.org/licenses/> for more information.
 
 =cut
