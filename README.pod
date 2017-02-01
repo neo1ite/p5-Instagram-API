@@ -6,6 +6,12 @@
 
 Instagram::API - Perl OO interface to Instagram without any authorization
 
+=for Pod::Coverage getAccount getAccountById getLocationById getLocationMediasById getLocationTopMediasById getMediaByCode getMediaById getMediaByUrl getMediaCommentsByCode getMediaCommentsById getMedias getMediasByTag getPaginateMedias getPaginateMediasByTag getTopMediasByTagName searchAccountsByUsername searchTagsByTagName
+
+=for html <a href="https://travis-ci.org/neo1ite/p5-Instagram-API"><img src="https://travis-ci.org/neo1ite/p5-Instagram-API.svg?branch=master"></a>
+
+=for html <a href='https://coveralls.io/github/neo1ite/p5-Instagram-API?branch=master'><img src='https://coveralls.io/repos/github/neo1ite/p5-Instagram-API/badge.svg?branch=master' alt='Coverage Status' /></a>
+
 =head1 VERSION
 
 version 0.01
