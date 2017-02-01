@@ -1,7 +1,9 @@
 install:
   - ppm install dmake
   - ppm install Devel-CheckLib
+  - ppm install NetAddr-IP
   - ppm install Data-Validate-IP
+  - ppm install Net-Domain-TLD
   - ppm install Data-Validate-Domain
   - ppm install Data-Validate-URI
   - ppm install JSON-MaybeXS
