@@ -1,7 +1,7 @@
 install:
   - ppm install dmake
   - ppm install Devel-CheckLib
-  - ppm install Data::Validate::URI
+  - ppm install Data-Validate-URI
 build_script:
   - perl Makefile.PL
   - dmake
