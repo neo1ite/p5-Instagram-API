@@ -1,3 +1,6 @@
+install:
+  - ppm install dmake
+  - ppm install Devel-CheckLib
 build_script:
   - perl Makefile.PL
   - dmake
