@@ -1,0 +1,8 @@
+build_script:
+  - perl Makefile.PL
+  - dmake
+
+test_script:
+  - dmake test
+
+#clone_depth: 5
