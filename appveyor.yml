@@ -1,7 +1,10 @@
 install:
   - ppm install dmake
   - ppm install Devel-CheckLib
+  - ppm install Data-Validate-IP
+  - ppm install Data-Validate-Domain
   - ppm install Data-Validate-URI
+  - ppm install JSON-MaybeXS
 build_script:
   - perl Makefile.PL
   - dmake
