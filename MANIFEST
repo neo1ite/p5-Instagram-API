@@ -3,6 +3,7 @@ Makefile.PL
 MANIFEST
 README.pod
 .travis.yml
+appveyor.yml
 t/00_compile.t
 t/00_strict.t
 t/01_Instagram-API-Endpoints.t

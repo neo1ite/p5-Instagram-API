@@ -92,7 +92,12 @@ my $media_from_media_page = Instagram::API::Media->fromMediaPage({
     display_src       => 'https://scontent-arn2-1.cdninstagram.com/t51.2885-15/e15/16230160_207444976393553_3158159954636963840_n.jpg?ig_cache_key=MTQzOTI4NDkyNDQyNjUxMTUwNQ%3D%3D.2',
     caption           => 'Красота😍😍😍
 Отметь тех с кем хочешь так же прокатиться🏂🎿⛷',
-    location          => undef,
+    location          => {
+        name            => 'Турбаза Арктика',
+        slug            => '',
+        id              => 60969779,
+        has_public_page => 1
+    },
     owner => {
         id              => '1948257780',
         username        => 'instavideo_kz',
@@ -120,6 +125,8 @@ is($media_from_media_page->{imageHighResolutionUrl},     'https://scontent.cdnin
 is($media_from_media_page->{type},                       'video');
 is($media_from_media_page->{videoStandardResolutionUrl}, 'https://scontent-arn2-1.cdninstagram.com/t50.2886-16/16405412_707643799417427_1363430646491381760_n.mp4');
 is($media_from_media_page->{videoViews},                 39694);
+is($media_from_media_page->{locationId},                 60969779);
+is($media_from_media_page->{locationName},               'Турбаза Арктика');
 
 my $media_from_api = Instagram::API::Media->fromApi({
     id                => '1418403761009124612',

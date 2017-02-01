@@ -51,21 +51,21 @@ sub getAccountMediasJsonLink
     $maxId //= '';
 
     return (ACCOUNT_MEDIAS =~ s/\{username\}/uri_escape_utf8($username)/ser)
-        =~ s/\{max_id\}/uri_escape_utf8($maxId)/ser;
+        =~ s/\{max_id\}/uri_escape($maxId)/ser;
 }
 
 sub getMediaPageLink
 {
     my ($code) = @_;
 
-    return MEDIA_LINK =~ s/\{code\}/uri_escape_utf8($code)/ser;
+    return MEDIA_LINK =~ s/\{code\}/uri_escape($code)/ser;
 }
 
 sub getMediaJsonLink
 {
     my ($code) = @_;
 
-    return MEDIA_JSON_INFO =~ s/\{code\}/uri_escape_utf8($code)/ser;
+    return MEDIA_JSON_INFO =~ s/\{code\}/uri_escape($code)/ser;
 }
 
 sub getMediasJsonByLocationIdLink
@@ -73,8 +73,8 @@ sub getMediasJsonByLocationIdLink
     my ($facebookLocationId, $maxId) = @_;
     $maxId //= '';
 
-    return (MEDIA_JSON_BY_LOCATION_ID =~ s/\{\{facebookLocationId\}\}/uri_escape_utf8($facebookLocationId)/ser)
-        =~ s/\{\{maxId\}\}/uri_escape_utf8($maxId)/ser;
+    return (MEDIA_JSON_BY_LOCATION_ID =~ s/\{\{facebookLocationId\}\}/uri_escape($facebookLocationId)/ser)
+        =~ s/\{\{maxId\}\}/uri_escape($maxId)/ser;
 }
 
 sub getMediasJsonByTagLink
@@ -83,7 +83,7 @@ sub getMediasJsonByTagLink
     $maxId //= '';
 
     return (MEDIA_JSON_BY_TAG =~ s/\{tag\}/uri_escape_utf8($tag)/ser)
-        =~ s/\{max_id\}/uri_escape_utf8($maxId)/ser;
+        =~ s/\{max_id\}/uri_escape($maxId)/ser;
 }
 
 sub getGeneralSearchJsonLink
@@ -97,8 +97,8 @@ sub getLastCommentsByCodeLink
 {
     my ($code, $count) = @_;
 
-    return (LAST_COMMENTS_BY_CODE =~ s/\{\{code\}\}/uri_escape_utf8($code)/ser)
-        =~ s/\{\{count\}\}/uri_escape_utf8($count)/ser;
+    return (LAST_COMMENTS_BY_CODE =~ s/\{\{code\}\}/uri_escape($code)/ser)
+        =~ s/\{\{count\}\}/uri_escape($count)/ser;
 }
 
 sub getCommentsBeforeCommentIdByCode
@@ -106,15 +106,15 @@ sub getCommentsBeforeCommentIdByCode
     my ($code, $count, $commentId) = @_;
 
     return ((COMMENTS_BEFORE_COMMENT_ID_BY_CODE =~ s/\{\{code\}\}/uri_escape_utf8($code)/ser)
-        =~ s/\{\{count\}\}/uri_escape_utf8($count)/ser)
-            =~ s/\{\{commentId\}\}/uri_escape_utf8($commentId)/ser;
+        =~ s/\{\{count\}\}/uri_escape($count)/ser)
+            =~ s/\{\{commentId\}\}/uri_escape($commentId)/ser;
 }
 
 sub getLastLikesByCodeLink
 {
     my ($code) = @_;
 
-    return LAST_LIKES_BY_CODE =~ s/\{\{code\}\}/uri_escape_utf8($code)/ser;
+    return LAST_LIKES_BY_CODE =~ s/\{\{code\}\}/uri_escape($code)/ser;
 }
 
 1;
