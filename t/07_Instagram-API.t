@@ -23,10 +23,10 @@ ok(blessed($instagram->{browser}) && $instagram->{browser}->isa('LWP::UserAgent'
 my $r = $instagram->{browser}->get('https://www.instagram.com/');
 
 SKIP: {
-    skip 'No connection with Instragram.com', 56 + (20 * 19) + (14 * 20) + (20 * 19) + (14 * 20) unless ($r && $r->code == 200);
+    skip 'No connection with Instragram.com', 60 + (20 * 19) + (14 * 20) + (20 * 19) + (14 * 20) + (99 * 8) unless ($r && $r->code == 200);
 
 #>----------------------------------------------------------------------------<#
-#>                                 getAccount                                 <#
+#>                                getAccount(4)                               <#
 #>----------------------------------------------------------------------------<#
 
     my $user_by_name = $instagram->getAccount('ne01ite');
@@ -43,7 +43,7 @@ SKIP: {
     }
 
 #>----------------------------------------------------------------------------<#
-#>                               getAccountById                               <#
+#>                              getAccountById(8)                             <#
 #>----------------------------------------------------------------------------<#
 
     my $user_by_id = $instagram->getAccountById(1838386734);
@@ -66,7 +66,7 @@ SKIP: {
     }
 
 #>----------------------------------------------------------------------------<#
-#>                                 getMedias                                  <#
+#>                                getMedias(1)                                <#
 #>----------------------------------------------------------------------------<#
 
     my $empty_media_by_user = $instagram->getMedias('ne01ite');
@@ -84,7 +84,7 @@ SKIP: {
     );
 
 #>----------------------------------------------------------------------------<#
-#>                                 getMedias                                  <#
+#>                       getMedias(1 + (20 * (15 + 4)))                       <#
 #>----------------------------------------------------------------------------<#
 
     my $medias_by_user = $instagram->getMedias('realdonaldtrump');
@@ -92,7 +92,7 @@ SKIP: {
 
     my $i = 1;
     foreach my $media (@{$medias_by_user}) {
-        ok(blessed($media) && $media->isa('Instagram::API::Media'), 'Checking media object #' . $i);
+        isa_ok($media, 'Instagram::API::Media', 'Checking media object #' . $i);
         ok(exists($media->{id}));
         ok(exists($media->{code}));
         ok(exists($media->{type}));
@@ -117,7 +117,7 @@ SKIP: {
     }
 
 #>----------------------------------------------------------------------------<#
-#>                             getPaginateMedias                              <#
+#>                   getPaginateMedias(5 + (20 * (15 + 4)))                   <#
 #>----------------------------------------------------------------------------<#
 
     my $paginate_medias = $instagram->getPaginateMedias('avrillavigne');
@@ -131,7 +131,7 @@ SKIP: {
 
     $i = 1;
     foreach my $media (@{$paginate_medias->{medias}}) {
-        ok(blessed($media) && $media->isa('Instagram::API::Media'), 'Checking media object #' . $i);
+        isa_ok($media, 'Instagram::API::Media', 'Checking media object #' . $i);
         ok(exists($media->{id}));
         ok(exists($media->{code}));
         ok(exists($media->{link}));
@@ -156,14 +156,15 @@ SKIP: {
     }
 
 #>----------------------------------------------------------------------------<#
-#>                                getMediaByUrl                               <#
+#>                              getMediaByUrl(17)                             <#
 #>----------------------------------------------------------------------------<#
 
     my $media_by_url = $instagram->getMediaByUrl('https://www.instagram.com/p/BP6dCn0B2Vc/');
-    ok(blessed($media_by_url) && $media_by_url->isa('Instagram::API::Media'), 'Getting media by URL');
+
+    isa_ok($media_by_url, 'Instagram::API::Media', 'Getting media by URL');
     ok(exists($media_by_url->{id}));
     ok(exists($media_by_url->{code}));
-    ok($media_by_url->{owner} && blessed($media_by_url->{owner}) && $media_by_url->{owner}->isa('Instagram::API::Account'));
+    isa_ok($media_by_url->{owner}, 'Instagram::API::Account');
     ok(exists($media_by_url->{type}));
     ok(exists($media_by_url->{createdTime}));
     ok(exists($media_by_url->{commentsCount}));
@@ -179,14 +180,15 @@ SKIP: {
     ok(exists($media_by_url->{locationName})    || 1);
 
 #>----------------------------------------------------------------------------<#
-#>                               getMediaByCode                               <#
+#>                             getMediaByCode(17)                             <#
 #>----------------------------------------------------------------------------<#
 
     my $media_by_code = $instagram->getMediaByCode('BOSsBnUhAaF');
-    ok(blessed($media_by_code) && $media_by_code->isa('Instagram::API::Media'), 'Getting media by URL');
+
+    isa_ok($media_by_code, 'Instagram::API::Media', 'Getting media by URL');
     ok(exists($media_by_code->{id}));
     ok(exists($media_by_code->{code}));
-    ok($media_by_code->{owner} && blessed($media_by_code->{owner}) && $media_by_code->{owner}->isa('Instagram::API::Account'));
+    isa_ok($media_by_code->{owner}, 'Instagram::API::Account');
     ok(exists($media_by_code->{type}));
     ok(exists($media_by_code->{createdTime}));
     ok(exists($media_by_code->{commentsCount}));
@@ -202,7 +204,7 @@ SKIP: {
     ok(exists($media_by_code->{locationName})    || 1);
 
 #>----------------------------------------------------------------------------<#
-#>                           getPaginateMediasByTag                           <#
+#>                 getPaginateMediasByTag(3 + (20 * (13 + 1)))                <#
 #>----------------------------------------------------------------------------<#
 
     ok(scalar(@{($instagram->getPaginateMediasByTag('winter')                                  // {})->{medias} // []}), 'Getting paginate medias by tag');
@@ -212,7 +214,7 @@ SKIP: {
 
     $i = 1;
     foreach my $media (@{$paginate_media_by_tag->{medias}}) {
-        ok(blessed($media) && $media->isa('Instagram::API::Media'), 'Checking media object #' . $i);
+        isa_ok($media, 'Instagram::API::Media', 'Checking media object #' . $i);
         ok(exists($media->{id}));
         ok(exists($media->{code}));
         ok(exists($media->{link}));
@@ -233,7 +235,7 @@ SKIP: {
     }
 
 #>----------------------------------------------------------------------------<#
-#>                               getMediasByTag                               <#
+#>                     getMediasByTag(3 + (20 * (13 + 1)))                    <#
 #>----------------------------------------------------------------------------<#
 
     is(scalar(@{$instagram->getMediasByTag('russia')                                     // []}), 12, 'Getting medias by tag');
@@ -242,7 +244,7 @@ SKIP: {
 
     $i = 1;
     foreach my $media (@{$instagram->getMediasByTag('москва', 20)}) {
-        ok(blessed($media) && $media->isa('Instagram::API::Media'), 'Checking media object #' . $i);
+        isa_ok($media, 'Instagram::API::Media', 'Checking media object #' . $i);
         ok(exists($media->{id}));
         ok(exists($media->{code}));
         ok(exists($media->{link}));
@@ -262,17 +264,119 @@ SKIP: {
         $i++;
     }
 
-    #$instagram->searchAccountsByUsername();
+#>----------------------------------------------------------------------------<#
+#>                   searchAccountsByUsername(2 + (99 * 8))                   <#
+#>----------------------------------------------------------------------------<#
 
-    #$instagram->searchTagsByTagName();
+    is(scalar(@{$instagram->searchAccountsByUsername('ne01ite')}),         1,  'Search user accounts #1');
+    cmp_ok(scalar(@{$instagram->searchAccountsByUsername('trump')}), '>=', 97, 'Search user accounts #2');
+    #eval { $instagram->searchAccountsByUsername('chiragchirag78') };
+    #like($@, qr/^Account with given username does not exist\./, 'Search non-existing user account');
 
-    #$instagram->getTopMediasByTagName();
+    foreach my $account (@{$instagram->searchAccountsByUsername('kremlin') // []}) {
+        isa_ok($account, 'Instagram::API::Account');
+        ok(exists($account->{id}));
+        ok(exists($account->{username}));
+        ok(exists($account->{fullName}));
+        ok(exists($account->{profilePicUrl}));
+        ok(exists($account->{followedByCount}));
+        ok(exists($account->{isPrivate}));
+        ok(exists($account->{isVerified}));
+    }
 
-    #$instagram->getMediaById();
-    #$instagram->getMediaCommentsById();
-    #$instagram->getMediaCommentsByCode();
+#>----------------------------------------------------------------------------<#
+#>                      searchTagsByTagName(2 + (3 * 4))                      <#
+#>----------------------------------------------------------------------------<#
+
+    cmp_ok(@{$instagram->searchTagsByTagName('ivanka') // []}, '>=', 1, 'Search tags');
+    cmp_ok(@{$instagram->searchTagsByTagName('море')   // []}, '>=', 2, 'Search national tags');
+
+    foreach my $tag (@{$instagram->searchTagsByTagName('солн') // []}) {
+        isa_ok($tag, 'Instagram::API::Tag');
+        ok(exists($tag->{id}));
+        ok(exists($tag->{name}));
+        ok(exists($tag->{mediaCount}));
+    }
+
+#>----------------------------------------------------------------------------<#
+#>                     getTopMediasByTagName(2 + (3 * 4))                     <#
+#>----------------------------------------------------------------------------<#
+
+    #my $top_medias_by_tagname = $instagram->getTopMediasByTagName();
+
+#>----------------------------------------------------------------------------<#
+#>                              getMediaById(17)                              <#
+#>----------------------------------------------------------------------------<#
+
+    my $media_by_id = $instagram->getMediaById(1422615236019959838);
+
+    isa_ok($media_by_id, 'Instagram::API::Media', 'Getting media by URL');
+
+    ok(exists($media_by_id->{id}));
+    ok(exists($media_by_id->{code}));
+    isa_ok($media_by_id->{owner}, 'Instagram::API::Account');
+    ok(exists($media_by_id->{type}));
+    ok(exists($media_by_id->{createdTime}));
+    ok(exists($media_by_id->{commentsCount}));
+    ok(exists($media_by_id->{likesCount}));
+    ok(exists($media_by_id->{imageThumbnailUrl}));
+    ok(exists($media_by_id->{imageLowResolutionUrl}));
+    ok(exists($media_by_id->{imageStandardResolutionUrl}));
+    ok(exists($media_by_id->{imageHighResolutionUrl}));
+    ok(exists($media_by_id->{caption})         || 1);
+    ok(exists($media_by_id->{captionIsEdited}) || 1);
+    ok(exists($media_by_id->{isAd})            || 1);
+    ok(exists($media_by_id->{locationId})      || 1);
+    ok(exists($media_by_id->{locationName})    || 1);
+
+#>----------------------------------------------------------------------------<#
+#>                    getMediaCommentsByCode(1 + (10 * 5))                    <#
+#>----------------------------------------------------------------------------<#
+
+    my $comments_by_code = $instagram->getMediaCommentsByCode('BCqxgYrKBXx');
+    is(scalar(@{$comments_by_code}), 10, 'Getting comments by media code');
+
+    foreach my $comment (@{$comments_by_code}) {
+        isa_ok($comment, 'Instagram::API::Comment');
+
+        ok(exists($comment->{id}));
+        ok(exists($comment->{user}));
+        ok(exists($comment->{text}));
+        ok(exists($comment->{createdAt}));
+    }
+
+#>----------------------------------------------------------------------------<#
+#>                     getMediaCommentsById(1 + (10 * 5))                     <#
+#>----------------------------------------------------------------------------<#
+
+    my $comments_by_id = $instagram->getMediaCommentsById(1175476025847977789);
+    is(scalar(@{$comments_by_code}), 10, 'Getting comments by media code');
+
+    foreach my $comment (@{$comments_by_code}) {
+        isa_ok($comment, 'Instagram::API::Comment', 'Getting comments by media code');
+
+        ok(exists($comment->{id}));
+        ok(exists($comment->{user}));
+        ok(exists($comment->{text}));
+        ok(exists($comment->{createdAt}));
+    }
+
+#>----------------------------------------------------------------------------<#
+#>                     getLocationTopMediasById(1 + (10 * 5))                     <#
+#>----------------------------------------------------------------------------<#
+
     #$instagram->getLocationTopMediasById();
+
+#>----------------------------------------------------------------------------<#
+#>                     getLocationMediasById(1 + (10 * 5))                     <#
+#>----------------------------------------------------------------------------<#
+
     #$instagram->getLocationMediasById();
+
+#>----------------------------------------------------------------------------<#
+#>                     getLocationById(1 + (10 * 5))                     <#
+#>----------------------------------------------------------------------------<#
+
     #$instagram->getLocationById();
 
 

@@ -11,6 +11,8 @@ use LWP::UserAgent;
 use Data::Validate::URI qw(is_uri);
 use Instagram::API::Endpoints;
 use Instagram::API::Media;
+use Instagram::API::Tag;
+use Instagram::API::Comment;
 
 require Exporter;
 
@@ -84,7 +86,7 @@ sub getAccountById($$)
     }
 
     my $userArray = decode_json($response->content);
-#warn Data::Dumper::Dumper $userArray;
+
     if ($userArray->{'status'} eq 'fail') {
         #throw new InstagramException($userArray['message']);
         croak $userArray->{'message'};
@@ -392,10 +394,10 @@ sub searchAccountsByUsername($$)
 
     my $response = $self->{browser}->get(Instagram::API::Endpoints::getGeneralSearchJsonLink($username));
 
-    if ($response->code == 404) {
-        #throw new InstagramNotFoundException('Account with given username does not exist.');
-        croak 'Account with given username does not exist.';
-    }
+    #if ($response->code == 404) {
+    #    #throw new InstagramNotFoundException('Account with given username does not exist.');
+    #    croak 'Account with given username does not exist.';
+    #}
 
     if ($response->code != 200) {
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
@@ -403,15 +405,18 @@ sub searchAccountsByUsername($$)
     }
 
     my $jsonResponse = decode_json($response->content);
-    if (!exists($jsonResponse->{'status'}) || $jsonResponse->{'status'} != 'ok') {
+
+    if (!exists($jsonResponse->{'status'}) || $jsonResponse->{'status'} ne 'ok') {
         #throw new InstagramException('Response code is not equal 200. Something went wrong. Please report issue.');
         croak 'Response code is not equal 200. Something went wrong. Please report issue.';
     }
+
     if (!exists($jsonResponse->{'users'}) || @{$jsonResponse->{'users'}} == 0) {
         return [];
     }
 
     my $accounts = [];
+
     foreach my $jsonAccount (@{$jsonResponse->{'users'}}) {
         push @{$accounts}, Instagram::API::Account->fromSearchPage($jsonAccount->{'user'});
     }
@@ -425,10 +430,10 @@ sub searchTagsByTagName($$)
 
     my $response = $self->{browser}->get(Instagram::API::Endpoints::getGeneralSearchJsonLink($tag));
 
-    if ($response->code == 404) {
-        #throw new InstagramNotFoundException('Account with given username does not exist.');
-        croak 'Account with given username does not exist.';
-    }
+    #if ($response->code == 404) {
+    #    #throw new InstagramNotFoundException('Account with given username does not exist.');
+    #    croak 'Account with given username does not exist.';
+    #}
 
     if ($response->code != 200) {
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
@@ -436,7 +441,8 @@ sub searchTagsByTagName($$)
     }
 
     my $jsonResponse = decode_json($response->content);
-    if (!exists($jsonResponse->{'status'}) || $jsonResponse->{'status'} != 'ok') {
+
+    if (!exists($jsonResponse->{'status'}) || $jsonResponse->{'status'} ne 'ok') {
         #throw new InstagramException('Response code is not equal 200. Something went wrong. Please report issue.');
         croak 'Response code is not equal 200. Something went wrong. Please report issue.';
     }
@@ -446,8 +452,9 @@ sub searchTagsByTagName($$)
     }
 
     my $hashtags = [];
+
     foreach my $jsonHashtag (@{$jsonResponse->{'hashtags'}}) {
-        push @{$hashtags}, Tag::fromSearchPage($jsonHashtag->{'hashtag'});
+        push @{$hashtags}, Instagram::API::Tag->fromSearchPage($jsonHashtag->{'hashtag'});
     }
 
     return $hashtags;
@@ -482,7 +489,7 @@ sub getTopMediasByTagName($$)
 sub getMediaById($$)
 {
     my ($self, $mediaId) = @_;
-    my $mediaLink = Media::Instagram::API::Media->getLinkFromId($mediaId);
+    my $mediaLink = Instagram::API::Media->getLinkFromId($mediaId);
 
     return $self->getMediaByUrl($mediaLink);
 }
@@ -509,28 +516,40 @@ sub getMediaCommentsByCode($$;$$)
 
     while ($hasPrevious && $index < $count) {
         my $numberOfCommentsToRetreive;
+
         if ($remain > MAX_COMMENTS_PER_REQUEST) {
-            $numberOfCommentsToRetreive = MAX_COMMENTS_PER_REQUEST;
-            $remain -= MAX_COMMENTS_PER_REQUEST;
-            $index += MAX_COMMENTS_PER_REQUEST;
+            $numberOfCommentsToRetreive  = MAX_COMMENTS_PER_REQUEST;
+            $remain                     -= MAX_COMMENTS_PER_REQUEST;
+            $index                      += MAX_COMMENTS_PER_REQUEST;
         } else {
-            $numberOfCommentsToRetreive = $remain;
-            $index += $remain;
-            $remain = 0;
+            $numberOfCommentsToRetreive  = $remain;
+            $index                      += $remain;
+            $remain                      = 0;
         }
 
         my $parameters;
-        if (!isset($maxId)) {
+        if (!defined($maxId)) {
             $parameters = Instagram::API::Endpoints::getLastCommentsByCodeLink($code, $numberOfCommentsToRetreive);
         } else {
             $parameters = Instagram::API::Endpoints::getCommentsBeforeCommentIdByCode($code, $numberOfCommentsToRetreive, $maxId);
         }
 
-        my $jsonResponse = decode_json($self->_getContentsFromUrl($parameters));
+        my $response = $self->_getContentsFromUrl($parameters);
+
+        if ($response->code != 200) {
+            #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
+            croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
+        }
+
+        my $jsonResponse = decode_json($response->content);
         my $nodes = $jsonResponse->{'comments'}{'nodes'};
 
+        if (@{$nodes} == 0) {
+            return $comments;
+        }
+
         foreach my $commentArray (@{$nodes}) {
-            push @{$comments}, Comment::fromApi($commentArray);
+            push @{$comments}, Instagram::API::Comment->fromApi($commentArray);
         }
 
         my $hasPrevious      = $jsonResponse->{'comments'}{'page_info'}{'has_previous_page'};
@@ -538,9 +557,6 @@ sub getMediaCommentsByCode($$;$$)
 
         if ($count > $numberOfComments) {
             $count = $numberOfComments;
-        }
-        if (sizeof($nodes) == 0) {
-            return $comments;
         }
 
         $maxId = $nodes->[-1]{'id'};
@@ -566,7 +582,9 @@ sub getLocationTopMediasById($$)
     }
 
     my $jsonResponse = decode_json($response->content);
+
     my $nodes = $jsonResponse->{'location'}{'top_posts'}{'nodes'};
+
     my $medias = [];
 
     foreach my $mediaArray ($nodes) {
@@ -597,16 +615,18 @@ sub getLocationMediasById($$;$$)
         my $arr = decode_json($response->content);
         my $nodes = $arr->{'location'}{'media'}{'nodes'};
 
+        if (@{$nodes} == 0) {
+            return $medias;
+        }
+
         foreach my $mediaArray (@{$nodes}) {
             if ($index == $quantity) {
                 return $medias;
             }
-            push @{$medias}, Instagram::API::Media->fromTagPage($mediaArray);
-            $index++;
-        }
 
-        if (@{$nodes} == 0) {
-            return $medias;
+            push @{$medias}, Instagram::API::Media->fromTagPage($mediaArray);
+
+            $index++;
         }
 
         $hasNext = $arr->{'location'}{'media'}{'page_info'}{'has_next_page'};
