@@ -9,7 +9,7 @@ perl:
 
 os:
   - linux
-  - osx
+#  - osx
 #branches:
 #  only:
 #    - /^build/
