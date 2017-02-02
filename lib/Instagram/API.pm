@@ -210,14 +210,14 @@ sub getPaginateMedias($$;$)
 
     if ($response->code != 200) {
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.';
+        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
     }
 
     my $arr = decode_json($response->content);
 
-    if (ref($arr) ne 'ARRAY') {
+    if (ref($arr) ne 'HASH') {
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.';
+        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
     }
 
     if (@{$arr->{'items'}} == 0) {
@@ -265,7 +265,7 @@ sub getMediaByUrl($$)
 
     if ($response->code != 200) {
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.';
+        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
     }
 
     my $mediaArray = decode_json($response->content);
@@ -293,7 +293,7 @@ sub getMediasByTag($$;$$)
 
         if ($response->code != 200) {
             #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-            croak 'Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.';
+            croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
         }
 
         my $arr = decode_json($response->content);
@@ -346,17 +346,17 @@ sub getPaginateMediasByTag($$;$)
 
     if ($response->code != 200) {
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.';
+        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
     }
 
     my $arr = decode_json($response->content);
 
-    if (ref($arr) ne 'ARRAY') {
+    if (ref($arr) ne 'HASH') {
         #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
         croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
     }
 
-    if (@{$arr->{'tag'}{'media'}{'count'}} == 0) {
+    if ($arr->{'tag'}{'media'}{'count'} == 0) {
         return $toReturn;
     }
 
@@ -395,7 +395,7 @@ sub searchAccountsByUsername($$)
 
     if ($response->code != 200) {
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.';
+        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
     }
 
     my $jsonResponse = decode_json($response->content);
@@ -428,7 +428,7 @@ sub searchTagsByTagName($$)
 
     if ($response->code != 200) {
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.';
+        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
     }
 
     my $jsonResponse = decode_json($response->content);
@@ -462,7 +462,7 @@ sub getTopMediasByTagName($$)
 
     if ($response->code != 200) {
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.';
+        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
     }
 
     my $jsonResponse = decode_json($response->content);
@@ -558,7 +558,7 @@ sub getLocationTopMediasById($$)
 
     if ($response->code != 200) {
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.';
+        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
     }
 
     my $jsonResponse = decode_json($response->content);
@@ -587,7 +587,7 @@ sub getLocationMediasById($$;$$)
 
         if ($response->code != 200) {
             #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-            croak 'Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.';
+            croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
         }
 
         my $arr = decode_json($response->content);
@@ -625,7 +625,7 @@ sub getLocationById($$)
 
     if ($response->code != 200) {
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.';
+        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
     }
 
     my $jsonResponse = decode_json($response->content);
