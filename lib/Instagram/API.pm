@@ -6,6 +6,7 @@ use warnings;
 use autouse 'Data::Dumper';
 
 use Carp;
+use Try::Tiny;
 use JSON::MaybeXS;
 use LWP::UserAgent;
 use Data::Validate::URI qw(is_uri);
@@ -51,20 +52,29 @@ sub getAccount($$)
     my ($self, $username) = @_;
 
     my $response = $self->{browser}->get(Instagram::API::Endpoints::getAccountJsonLink($username));
+
     if ($response->code == 404) {
         #throw new InstagramNotFoundException('Account with given username does not exist.');
         croak 'Account with given username does not exist.';
     }
+
     if ($response->code != 200) {
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
         croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
     }
 
-    my $userArray = decode_json($response->content);
+    my $userArray;
+    try {
+        $userArray = decode_json($response->content);
+    } catch {
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+    };
+
     if (!exists($userArray->{'user'})) {
         #throw new InstagramException('Account with this username does not exist');
         croak 'Account with this username does not exist';
     }
+
     return Instagram::API::Account->fromAccountPage($userArray->{'user'});
 }
 
@@ -86,7 +96,12 @@ sub getAccountById($$)
         croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
     }
 
-    my $userArray = decode_json($response->content);
+    my $userArray;
+    try {
+        $userArray = decode_json($response->content);
+    } catch {
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+    };
 
     if ($userArray->{'status'} eq 'fail') {
         #throw new InstagramException($userArray['message']);
@@ -105,11 +120,8 @@ sub _getContentsFromUrl($$)
 {
     my ($self, $parameters) = @_;
 
-    #if (!function_exists('curl_init')) {
-    #    return;
-    #}
-
     my $random = $self->_generateRandomString(32);
+
     my $request = HTTP::Request->new(
         'POST' => Instagram::API::Endpoints::INSTAGRAM_QUERY_URL(),
         HTTP::Headers->new(
@@ -120,23 +132,10 @@ sub _getContentsFromUrl($$)
         ),
         'q=' . $parameters
     );
-#warn Instagram::API::Endpoints::INSTAGRAM_QUERY_URL() . 'q=' . $parameters;
-    #my $ch = curl_init();
-    #curl_setopt($ch, CURLOPT_URL, Instagram::API::Endpoints::INSTAGRAM_QUERY_URL);
-    #curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-    #curl_setopt($ch, CURLOPT_POST, 1);
-    #curl_setopt($ch, CURLOPT_POSTFIELDS, 'q=' . $parameters);
-    my $response = $self->{browser}->request($request);
-#warn Data::Dumper::Dumper $response;
-    #my @headers;
-    #push @headers, "Cookie:  csrftoken=$random;";
-    #push @headers, "X-Csrftoken: $random";
-    #push @headers, "Referer: https://www.instagram.com/";
-    #curl_setopt($ch, CURLOPT_HTTPHEADER, \@headers);
-    #my $output = curl_exec($ch);
-    #curl_close($ch);
 
-    return $response;#->content;
+    my $response = $self->{browser}->request($request);
+
+    return $response;
 }
 
 sub _generateRandomString($;$)
@@ -144,9 +143,9 @@ sub _generateRandomString($;$)
     my ($self, $length) = @_;
     $length //= 10;
 
-    my @characters = (0..9,'a'..'z','A'..'Z');#'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    my $charactersLength = @characters;
-    my $randomString = '';
+    my @characters       = (0 .. 9, 'a' .. 'z', 'A' .. 'Z');
+    my $charactersLength = scalar @characters;
+    my $randomString     = '';
 
     for (my $i = 0; $i < $length; $i++) {
         $randomString .= $characters[sprintf('%.f', rand($charactersLength - 1))];
@@ -161,8 +160,8 @@ sub getMedias($$;$$)
     $count //= 20;
     $maxId //= '';
 
-    my $index = 0;
-    my $medias = [];
+    my $medias          = [];
+    my $index           = 0;
     my $isMoreAvailable = 1;
 
     while ($index < $count && $isMoreAvailable) {
@@ -173,27 +172,25 @@ sub getMedias($$;$$)
             croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
         }
 
-        my $arr = decode_json($response->content);
+        my $jsonResponse;
+        try {
+            $jsonResponse = decode_json($response->content);
+        } catch {
+            croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+        };
 
-        if (ref($arr) ne 'HASH') {
-            #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-            croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
-        }
+        return [] unless @{$jsonResponse->{'items'} // []};
 
-        if (@{$arr->{'items'} // []} == 0) {
-            return [];
-        }
+        foreach my $mediaArray (@{$jsonResponse->{'items'}}) {
+            return $medias if ($index == $count);
 
-        foreach my $mediaArray (@{$arr->{'items'}}) {
-            if ($index == $count) {
-                return $medias;
-            }
             push @{$medias}, Instagram::API::Media->fromApi($mediaArray);
+
             $index++;
         }
 
-        $maxId           = $arr->{'items'}[-1]{'id'};
-        $isMoreAvailable = $arr->{'more_available'};
+        $maxId           = $jsonResponse->{'items'}[-1]{'id'};
+        $isMoreAvailable = $jsonResponse->{'more_available'};
     }
 
     return $medias;
@@ -220,23 +217,21 @@ sub getPaginateMedias($$;$)
         croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
     }
 
-    my $arr = decode_json($response->content);
+    my $jsonResponse;
+    try {
+        $jsonResponse = decode_json($response->content);
+    } catch {
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+    };
 
-    if (ref($arr) ne 'HASH') {
-        #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
-    }
+    return $toReturn unless @{$jsonResponse->{'items'} // []};
 
-    if (@{$arr->{'items'}} == 0) {
-        return $toReturn;
-    }
-
-    foreach my $mediaArray (@{$arr->{'items'}}) {
+    foreach my $mediaArray (@{$jsonResponse->{'items'}}) {
         push @{$medias}, Instagram::API::Media->fromApi($mediaArray);
     }
 
-    $maxId       = $arr->{'items'}[-1]{'id'};
-    $hasNextPage = $arr->{'more_available'};
+    $maxId       = $jsonResponse->{'items'}[-1]{'id'};
+    $hasNextPage = $jsonResponse->{'more_available'};
 
     $toReturn = {
         'medias'      => $medias,
@@ -258,29 +253,26 @@ sub getMediaByUrl($$)
 {
     my ($self, $mediaUrl) = @_;
 
-    if (!is_uri($mediaUrl)) {
-        #throw new \InvalidArgumentException('Malformed media url');
-        croak 'Malformed media url';
-    }
+    croak 'Malformed media url' unless is_uri($mediaUrl);
+    #throw new \InvalidArgumentException('Malformed media url');
 
     my $response = $self->{browser}->get(($mediaUrl =~ s!/+$!!r) . '/?__a=1');
 
-    if ($response->code == 404) {
-        #throw new InstagramNotFoundException('Media with given code does not exist or account is private.');
-        croak 'Media with given code does not exist or account is private.';
-    }
+    croak 'Media with given code does not exist or account is private.' if ($response->code == 404);
+    #throw new InstagramNotFoundException('Media with given code does not exist or account is private.');
 
-    if ($response->code != 200) {
-        #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
-    }
+    croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.' if ($response->code != 200);
+    #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
 
-    my $mediaArray = decode_json($response->content);
+    my $mediaArray;
+    try {
+        $mediaArray = decode_json($response->content);
+    } catch {
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+    };
 
-    if (!exists($mediaArray->{'media'})) {
-        #throw new InstagramException('Media with this code does not exist');
-        croak 'Media with this code does not exist';
-    }
+    croak 'Media with this code does not exist' unless exists($mediaArray->{'media'});
+    #throw new InstagramException('Media with this code does not exist');
 
     return Instagram::API::Media->fromMediaPage($mediaArray->{'media'});
 }
@@ -291,45 +283,37 @@ sub getMediasByTag($$;$$)
     $count //= 12;
     $maxId //= '';
 
-    my $index = 0;
-    my $medias = [];
+    my $medias      = [];
+    my $index       = 0;
     my $hasNextPage = 1;
 
     while ($index < $count && $hasNextPage) {
         my $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByTagLink($tag, $maxId));
 
-        if ($response->code != 200) {
-            #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-            croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
-        }
+        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.' if ($response->code != 200);
+        #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
 
-        my $arr = decode_json($response->content);
-
-        if (ref($arr) ne 'HASH') {
-            #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
+        my $jsonResponse;
+        try {
+            $jsonResponse = decode_json($response->content);
+        } catch {
             croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
-        }
+        };
+        #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
+        return $medias unless $jsonResponse->{'tag'}{'media'}{'count'};
 
-        if ($arr->{'tag'}{'media'}{'count'} == 0) {
-            return [];
-        }
-
-        my $nodes = $arr->{'tag'}{'media'}{'nodes'};
+        my $nodes = $jsonResponse->{'tag'}{'media'}{'nodes'};
+        return $medias unless @{$nodes};
 
         foreach my $mediaArray (@{$nodes}) {
-            if ($index == $count) {
-                return $medias;
-            }
+            return $medias if ($index == $count);
+
             push @{$medias}, Instagram::API::Media->fromTagPage($mediaArray);
             $index++;
         }
 
-        if (@{$nodes} == 0) {
-            return $medias;
-        }
-
-        $maxId       = $arr->{'tag'}{'media'}{'page_info'}{'end_cursor'};
-        $hasNextPage = $arr->{'tag'}{'media'}{'page_info'}{'has_next_page'};
+        $maxId       = $jsonResponse->{'tag'}{'media'}{'page_info'}{'end_cursor'};
+        $hasNextPage = $jsonResponse->{'tag'}{'media'}{'page_info'}{'has_next_page'};
     }
 
     return $medias;
@@ -341,7 +325,7 @@ sub getPaginateMediasByTag($$;$)
     $maxId //= '';
 
     my $hasNextPage = 1;
-    my $medias = [];
+    my $medias      = [];
 
     my $toReturn = {
         'medias'      => $medias,
@@ -351,34 +335,27 @@ sub getPaginateMediasByTag($$;$)
 
     my $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByTagLink($tag, $maxId));
 
-    if ($response->code != 200) {
-        #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
-    }
+    croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.' if ($response->code != 200);
+    #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
 
-    my $arr = decode_json($response->content);
-
-    if (ref($arr) ne 'HASH') {
-        #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
+    my $jsonResponse;
+    try {
+        $jsonResponse = decode_json($response->content);
+    } catch {
         croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
-    }
+    };
+    #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
+    return $toReturn unless $jsonResponse->{'tag'}{'media'}{'count'};
 
-    if ($arr->{'tag'}{'media'}{'count'} == 0) {
-        return $toReturn;
-    }
-
-    my $nodes = $arr->{'tag'}{'media'}{'nodes'};
-
-    if (@{$nodes} == 0) {
-        return $toReturn;
-    }
+    my $nodes = $jsonResponse->{'tag'}{'media'}{'nodes'};
+    return $toReturn unless @{$nodes};
 
     foreach my $mediaArray (@{$nodes}) {
         push @{$medias}, Instagram::API::Media->fromTagPage($mediaArray);
     }
 
-    $maxId       = $arr->{'tag'}{'media'}{'page_info'}{'end_cursor'};
-    $hasNextPage = $arr->{'tag'}{'media'}{'page_info'}{'has_next_page'};
+    $maxId       = $jsonResponse->{'tag'}{'media'}{'page_info'}{'end_cursor'};
+    $hasNextPage = $jsonResponse->{'tag'}{'media'}{'page_info'}{'has_next_page'};
 
     $toReturn = {
         'medias'      => $medias,
@@ -400,23 +377,22 @@ sub searchAccountsByUsername($$)
     #    croak 'Account with given username does not exist.';
     #}
 
-    if ($response->code != 200) {
-        #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
-    }
+    croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.' if ($response->code != 200);
+    #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
 
-    my $jsonResponse = decode_json($response->content);
+    my $jsonResponse;
+    try {
+        $jsonResponse = decode_json($response->content);
+    } catch {
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+    };
 
-    if (!exists($jsonResponse->{'status'}) || $jsonResponse->{'status'} ne 'ok') {
-        #throw new InstagramException('Response code is not equal 200. Something went wrong. Please report issue.');
-        croak 'Response code is not equal 200. Something went wrong. Please report issue.';
-    }
-
-    if (!exists($jsonResponse->{'users'}) || @{$jsonResponse->{'users'}} == 0) {
-        return [];
-    }
+    croak 'Response code is not equal 200. Something went wrong. Please report issue.' if (!exists($jsonResponse->{'status'}) || $jsonResponse->{'status'} ne 'ok');
+    #throw new InstagramException('Response code is not equal 200. Something went wrong. Please report issue.');
 
     my $accounts = [];
+
+    return $accounts if (!exists($jsonResponse->{'users'}) || !@{$jsonResponse->{'users'}});
 
     foreach my $jsonAccount (@{$jsonResponse->{'users'}}) {
         push @{$accounts}, Instagram::API::Account->fromSearchPage($jsonAccount->{'user'});
@@ -436,23 +412,22 @@ sub searchTagsByTagName($$)
     #    croak 'Account with given username does not exist.';
     #}
 
-    if ($response->code != 200) {
-        #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
-    }
+    croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.' if ($response->code != 200);
+    #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
 
-    my $jsonResponse = decode_json($response->content);
+    my $jsonResponse;
+    try {
+        $jsonResponse = decode_json($response->content);
+    } catch {
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+    };
 
-    if (!exists($jsonResponse->{'status'}) || $jsonResponse->{'status'} ne 'ok') {
-        #throw new InstagramException('Response code is not equal 200. Something went wrong. Please report issue.');
-        croak 'Response code is not equal 200. Something went wrong. Please report issue.';
-    }
-
-    if (!exists($jsonResponse->{'hashtags'}) || @{$jsonResponse->{'hashtags'}} == 0) {
-        return [];
-    }
+    croak 'Response code is not equal 200. Something went wrong. Please report issue.' if (!exists($jsonResponse->{'status'}) || $jsonResponse->{'status'} ne 'ok');
+    #throw new InstagramException('Response code is not equal 200. Something went wrong. Please report issue.');
 
     my $hashtags = [];
+
+    return $hashtags if (!exists($jsonResponse->{'hashtags'}) || @{$jsonResponse->{'hashtags'}} == 0);
 
     foreach my $jsonHashtag (@{$jsonResponse->{'hashtags'}}) {
         push @{$hashtags}, Instagram::API::Tag->fromSearchPage($jsonHashtag->{'hashtag'});
@@ -472,14 +447,20 @@ sub getTopMediasByTagName($$)
         croak 'Account with given username does not exist.';
     }
 
-    if ($response->code != 200) {
-        #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
-    }
+    croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.' if ($response->code != 200);
+    #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
 
-    my $jsonResponse = decode_json($response->content);
+    my $jsonResponse;
+    try {
+        $jsonResponse = decode_json($response->content);
+    } catch {
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+    };
 
     my $medias = [];
+
+    return $medias unless (exists($jsonResponse->{'tag'}{'top_posts'}{'nodes'}) && @{$jsonResponse->{'tag'}{'top_posts'}{'nodes'}});
+
     foreach my $mediaArray (@{$jsonResponse->{'tag'}{'top_posts'}{'nodes'}}) {
         push @{$medias}, Instagram::API::Media->fromTagPage($mediaArray);
     }
@@ -490,6 +471,7 @@ sub getTopMediasByTagName($$)
 sub getMediaById($$)
 {
     my ($self, $mediaId) = @_;
+
     my $mediaLink = Instagram::API::Media->getLinkFromId($mediaId);
 
     return $self->getMediaByUrl($mediaLink);
@@ -511,9 +493,9 @@ sub getMediaCommentsByCode($$;$$)
     $count //= 10;
 
     my $remain      = $count;
-    my $comments    = [];
     my $index       = 0;
     my $hasPrevious = 1;
+    my $comments    = [];
 
     while ($hasPrevious && $index < $count) {
         my $numberOfCommentsToRetreive;
@@ -537,23 +519,19 @@ sub getMediaCommentsByCode($$;$$)
 
         my $response = $self->_getContentsFromUrl($parameters);
 
-        if ($response->code != 200) {
-            #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-            croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
-        }
+        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.' if ($response->code != 200);
+        #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
 
-        my $jsonResponse = decode_json($response->content);
-
-        if (ref($jsonResponse) ne 'HASH') {
-            #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
+        my $jsonResponse;
+        try {
+            $jsonResponse = decode_json($response->content);
+        } catch {
             croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
-        }
+        };
+        #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
 
         my $nodes = $jsonResponse->{'comments'}{'nodes'};
-
-        if (@{$nodes} == 0) {
-            return $comments;
-        }
+        return $comments unless @{$nodes};
 
         foreach my $commentArray (@{$nodes}) {
             push @{$comments}, Instagram::API::Comment->fromApi($commentArray);
@@ -562,9 +540,7 @@ sub getMediaCommentsByCode($$;$$)
         my $hasPrevious      = $jsonResponse->{'comments'}{'page_info'}{'has_previous_page'};
         my $numberOfComments = $jsonResponse->{'comments'}{'count'};
 
-        if ($count > $numberOfComments) {
-            $count = $numberOfComments;
-        }
+        $count = $numberOfComments if ($count > $numberOfComments);
 
         $maxId = $nodes->[-1]{'id'};
     }
@@ -578,22 +554,19 @@ sub getLocationTopMediasById($$)
 
     my $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByLocationIdLink($facebookLocationId));
 
-    if ($response->code == 404) {
-        #throw new InstagramNotFoundException('Location with this id doesn\'t exist');
-        croak 'Location with this id doesn\'t exist';
-    }
+    croak 'Location with this id doesn\'t exist' if ($response->code == 404);
+    #throw new InstagramNotFoundException('Location with this id doesn\'t exist');
 
-    if ($response->code != 200) {
-        #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
-    }
+    croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.' if ($response->code != 200);
+    #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
 
-    my $jsonResponse = decode_json($response->content);
-
-    if (ref($jsonResponse) ne 'HASH') {
-        #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
+    my $jsonResponse;
+    try {
+        $jsonResponse = decode_json($response->content);
+    } catch {
         croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
-    }
+    };
+    #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
 
     my $nodes = $jsonResponse->{'location'}{'top_posts'}{'nodes'};
 
@@ -619,36 +592,31 @@ sub getLocationMediasById($$;$$)
     while ($index < $quantity && $hasNext) {
         my $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByLocationIdLink($facebookLocationId, $offset));
 
-        if ($response->code != 200) {
-            #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-            croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
-        }
+        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.' if ($response->code != 200);
+        #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
 
-        my $arr = decode_json($response->content);
-
-        if (ref($arr) ne 'HASH') {
-            #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
+        my $jsonResponse;
+        try {
+            $jsonResponse = decode_json($response->content);
+        } catch {
             croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
-        }
+        };
+        #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
 
-        my $nodes = $arr->{'location'}{'media'}{'nodes'};
+        my $nodes = $jsonResponse->{'location'}{'media'}{'nodes'};
 
-        if (@{$nodes} == 0) {
-            return $medias;
-        }
+        return $medias unless @{$nodes};
 
         foreach my $mediaArray (@{$nodes}) {
-            if ($index == $quantity) {
-                return $medias;
-            }
+            return $medias if ($index == $quantity);
 
             push @{$medias}, Instagram::API::Media->fromTagPage($mediaArray);
 
             $index++;
         }
 
-        $hasNext = $arr->{'location'}{'media'}{'page_info'}{'has_next_page'};
-        $offset  = $arr->{'location'}{'media'}{'page_info'}{'end_cursor'};
+        $hasNext = $jsonResponse->{'location'}{'media'}{'page_info'}{'has_next_page'};
+        $offset  = $jsonResponse->{'location'}{'media'}{'page_info'}{'end_cursor'};
     }
 
     return $medias;
@@ -660,22 +628,19 @@ sub getLocationById($$)
 
     my $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByLocationIdLink($facebookLocationId));
 
-    if ($response->code == 404) {
-        #throw new InstagramNotFoundException('Location with this id doesn\'t exist');
-        croak 'Location with this id doesn\'t exist';
-    }
+    croak 'Location with this id doesn\'t exist' if ($response->code == 404);
+    #throw new InstagramNotFoundException('Location with this id doesn\'t exist');
 
-    if ($response->code != 200) {
-        #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
-    }
+    croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.' if ($response->code != 200);
+    #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
 
-    my $jsonResponse = decode_json($response->content);
-
-    if (ref($jsonResponse) ne 'HASH') {
-        #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
+    my $jsonResponse;
+    try {
+        $jsonResponse = decode_json($response->content);
+    } catch {
         croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
-    }
+    };
+    #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
 
     return Instagram::API::Location->makeLocation($jsonResponse->{'location'});
 }

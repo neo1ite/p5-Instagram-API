@@ -361,8 +361,10 @@ SKIP: {
 #>                    getMediaCommentsByCode(1 + (10 * 5))                    <#
 #>----------------------------------------------------------------------------<#
 
+    is(scalar(@{$instagram->getMediaCommentsByCode('BP79NgXhdJn', 900) // []}), 900, 'Getting comments by media code #1');
+
     my $comments_by_code = $instagram->getMediaCommentsByCode('BCqxgYrKBXx');
-    is(scalar(@{$comments_by_code}), 10, 'Getting comments by media code');
+    is(scalar(@{$comments_by_code}), 10, 'Getting comments by media code #2');
 
     foreach my $comment (@{$comments_by_code}) {
         isa_ok($comment, 'Instagram::API::Comment');
