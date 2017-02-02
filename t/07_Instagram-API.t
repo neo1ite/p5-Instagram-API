@@ -88,6 +88,7 @@ SKIP: {
 #>----------------------------------------------------------------------------<#
 
     my $medias_by_user = $instagram->getMedias('realdonaldtrump');
+
     is(@{$medias_by_user // []}, 20, 'Getting user medias');
 
     my $i = 1;
@@ -162,6 +163,7 @@ SKIP: {
     my $media_by_url = $instagram->getMediaByUrl('https://www.instagram.com/p/BP6dCn0B2Vc/');
 
     isa_ok($media_by_url, 'Instagram::API::Media', 'Getting media by URL');
+
     ok(exists($media_by_url->{id}));
     ok(exists($media_by_url->{code}));
     isa_ok($media_by_url->{owner}, 'Instagram::API::Account');
@@ -186,6 +188,7 @@ SKIP: {
     my $media_by_code = $instagram->getMediaByCode('BOSsBnUhAaF');
 
     isa_ok($media_by_code, 'Instagram::API::Media', 'Getting media by URL');
+
     ok(exists($media_by_code->{id}));
     ok(exists($media_by_code->{code}));
     isa_ok($media_by_code->{owner}, 'Instagram::API::Account');
@@ -238,8 +241,8 @@ SKIP: {
 #>                     getMediasByTag(3 + (20 * (13 + 1)))                    <#
 #>----------------------------------------------------------------------------<#
 
-    is(scalar(@{$instagram->getMediasByTag('russia')                                     // []}), 12, 'Getting medias by tag');
-    is(scalar(@{$instagram->getMediasByTag('россия', 20)                                 // []}), 20, 'Getting medias by national tag with count param');
+    is(scalar(@{$instagram->getMediasByTag('russia')                                                            // []}), 12, 'Getting medias by tag');
+    is(scalar(@{$instagram->getMediasByTag('россия', 20)                                                        // []}), 20, 'Getting medias by national tag with count param');
     is(scalar(@{$instagram->getMediasByTag('москва', 20, $instagram->getPaginateMediasByTag('москва')->{maxId}) // []}), 20, 'Getting medias by national tag with count and maxID params');
 
     $i = 1;
@@ -302,7 +305,32 @@ SKIP: {
 #>                     getTopMediasByTagName(2 + (3 * 4))                     <#
 #>----------------------------------------------------------------------------<#
 
-    #my $top_medias_by_tagname = $instagram->getTopMediasByTagName();
+    my $top_medias_by_tag_name = $instagram->getTopMediasByTagName('sweethome');
+
+    is(scalar(@{$top_medias_by_tag_name}), 9, 'Getting top medias by tag name');
+
+    $i = 1;
+    foreach my $media (@{$top_medias_by_tag_name}) {
+        isa_ok($media, 'Instagram::API::Media', 'Checking media object #' . $i);
+
+        ok(exists($media->{id}));
+        ok(exists($media->{code}));
+        ok(exists($media->{link}));
+        ok(exists($media->{type}));
+        if ($media->{type} eq 'video') {
+            ok(exists($media->{videoViews}));
+        }
+        ok(exists($media->{createdTime}));
+        ok(exists($media->{commentsCount}));
+        ok(exists($media->{likesCount}));
+        ok(exists($media->{imageThumbnailUrl}));
+        ok(exists($media->{imageLowResolutionUrl}));
+        ok(exists($media->{imageStandardResolutionUrl}));
+        ok(exists($media->{imageHighResolutionUrl}));
+        ok(exists($media->{caption}));
+
+        $i++;
+    }
 
 #>----------------------------------------------------------------------------<#
 #>                              getMediaById(17)                              <#
@@ -350,7 +378,8 @@ SKIP: {
 #>----------------------------------------------------------------------------<#
 
     my $comments_by_id = $instagram->getMediaCommentsById(1175476025847977789);
-    is(scalar(@{$comments_by_code}), 10, 'Getting comments by media code');
+
+    is(scalar(@{$comments_by_code}), 10, 'Getting comments by media id');
 
     foreach my $comment (@{$comments_by_code}) {
         isa_ok($comment, 'Instagram::API::Comment', 'Getting comments by media code');
@@ -362,24 +391,82 @@ SKIP: {
     }
 
 #>----------------------------------------------------------------------------<#
-#>                     getLocationTopMediasById(1 + (10 * 5))                     <#
+#>                getLocationTopMediasById(1 + (12 * (13 + 1)))               <#
 #>----------------------------------------------------------------------------<#
 
-    #$instagram->getLocationTopMediasById();
+    my $top_medias_by_location_id = $instagram->getLocationTopMediasById(60969779);
+
+    is(scalar(@{$top_medias_by_location_id}), 9, 'Getting top medias by location id');
+
+    $i = 1;
+    foreach my $media (@{$top_medias_by_location_id}) {
+        isa_ok($media, 'Instagram::API::Media', 'Checking media object #' . $i);
+        ok(exists($media->{id}));
+        ok(exists($media->{code}));
+        ok(exists($media->{link}));
+        ok(exists($media->{type}));
+        if ($media->{type} eq 'video') {
+            ok(exists($media->{videoViews}));
+        }
+        ok(exists($media->{createdTime}));
+
+        ok(exists($media->{commentsCount}));
+        ok(exists($media->{likesCount}));
+        ok(exists($media->{imageThumbnailUrl}));
+        ok(exists($media->{imageLowResolutionUrl}));
+        ok(exists($media->{imageStandardResolutionUrl}));
+        ok(exists($media->{imageHighResolutionUrl}));
+        ok(exists($media->{caption}));
+        $i++;
+    }
 
 #>----------------------------------------------------------------------------<#
-#>                     getLocationMediasById(1 + (10 * 5))                     <#
+#>                 getLocationMediasById(1 + (12 * (13 + 1)))                 <#
 #>----------------------------------------------------------------------------<#
 
-    #$instagram->getLocationMediasById();
+    my $medias_by_location_id = $instagram->getLocationMediasById(60969779);
+
+    is(scalar(@{$medias_by_location_id}), 12, 'Getting medias by location id');
+
+    $i = 1;
+    foreach my $media (@{$medias_by_location_id}) {
+        isa_ok($media, 'Instagram::API::Media', 'Checking media object #' . $i);
+        ok(exists($media->{id}));
+        ok(exists($media->{code}));
+        ok(exists($media->{link}));
+        ok(exists($media->{type}));
+        if ($media->{type} eq 'video') {
+            ok(exists($media->{videoViews}));
+        }
+        ok(exists($media->{createdTime}));
+
+        ok(exists($media->{commentsCount}));
+        ok(exists($media->{likesCount}));
+        ok(exists($media->{imageThumbnailUrl}));
+        ok(exists($media->{imageLowResolutionUrl}));
+        ok(exists($media->{imageStandardResolutionUrl}));
+        ok(exists($media->{imageHighResolutionUrl}));
+        ok(exists($media->{caption}));
+        $i++;
+    }
 
 #>----------------------------------------------------------------------------<#
-#>                     getLocationById(1 + (10 * 5))                     <#
+#>                             getLocationById(9)                             <#
 #>----------------------------------------------------------------------------<#
 
-    #$instagram->getLocationById();
+    my $location_by_id = $instagram->getLocationById(60969779);
 
+    isa_ok($location_by_id, 'Instagram::API::Location', 'Getting location by ID');
 
+    ok(exists($location_by_id->{id}));
+    ok(exists($location_by_id->{name}));
+    ok(exists($location_by_id->{lat}));
+    ok(exists($location_by_id->{lng}));
+
+    is($location_by_id->{id},   60969779);
+    is($location_by_id->{name}, 'Турбаза Арктика');
+    is($location_by_id->{lat},  68.786284278082);
+    is($location_by_id->{lng},  32.491183685900);
 };
 
 #########################

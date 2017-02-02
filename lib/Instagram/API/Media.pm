@@ -160,7 +160,7 @@ sub fromTagPage
     my ($self, $mediaArray) = @_;
 
     $self = __PACKAGE__->new() unless ($self && blessed($self) && $self->isa(__PACKAGE__));
-
+warn Data::Dumper::Dumper $mediaArray unless ref($mediaArray) eq 'HASH';
     $self->{code}          = $mediaArray->{'code'};
     $self->{link}          = Instagram::API::Endpoints->getMediaPageLink($self->{code});
     $self->{commentsCount} = $mediaArray->{'comments'}{'count'};

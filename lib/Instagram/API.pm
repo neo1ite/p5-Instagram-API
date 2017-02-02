@@ -13,6 +13,7 @@ use Instagram::API::Endpoints;
 use Instagram::API::Media;
 use Instagram::API::Tag;
 use Instagram::API::Comment;
+use Instagram::API::Location;
 
 require Exporter;
 
@@ -542,6 +543,12 @@ sub getMediaCommentsByCode($$;$$)
         }
 
         my $jsonResponse = decode_json($response->content);
+
+        if (ref($jsonResponse) ne 'HASH') {
+            #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
+            croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+        }
+
         my $nodes = $jsonResponse->{'comments'}{'nodes'};
 
         if (@{$nodes} == 0) {
@@ -583,11 +590,16 @@ sub getLocationTopMediasById($$)
 
     my $jsonResponse = decode_json($response->content);
 
+    if (ref($jsonResponse) ne 'HASH') {
+        #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+    }
+
     my $nodes = $jsonResponse->{'location'}{'top_posts'}{'nodes'};
 
     my $medias = [];
 
-    foreach my $mediaArray ($nodes) {
+    foreach my $mediaArray (@{$nodes}) {
         push @{$medias}, Instagram::API::Media->fromTagPage($mediaArray);
     }
 
@@ -613,6 +625,12 @@ sub getLocationMediasById($$;$$)
         }
 
         my $arr = decode_json($response->content);
+
+        if (ref($arr) ne 'HASH') {
+            #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
+            croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+        }
+
         my $nodes = $arr->{'location'}{'media'}{'nodes'};
 
         if (@{$nodes} == 0) {
@@ -654,7 +672,12 @@ sub getLocationById($$)
 
     my $jsonResponse = decode_json($response->content);
 
-    return Location::makeLocation($jsonResponse->{'location'});
+    if (ref($jsonResponse) ne 'HASH') {
+        #throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+    }
+
+    return Instagram::API::Location->makeLocation($jsonResponse->{'location'});
 }
 
 1;
