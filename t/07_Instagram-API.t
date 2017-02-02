@@ -23,16 +23,24 @@ ok(blessed($instagram->{browser}) && $instagram->{browser}->isa('LWP::UserAgent'
 my $r = $instagram->{browser}->get('https://www.instagram.com/');
 
 SKIP: {
-    skip 'No connection with Instragram.com', 52 + (20 * 19) + (14 * 20) + (20 * 19) + (14 * 20) unless ($r && $r->code == 200);
+    skip 'No connection with Instragram.com', 56 + (20 * 19) + (14 * 20) + (20 * 19) + (14 * 20) unless ($r && $r->code == 200);
 
 #>----------------------------------------------------------------------------<#
 #>                                 getAccount                                 <#
 #>----------------------------------------------------------------------------<#
 
     my $user_by_name = $instagram->getAccount('ne01ite');
+
     ok(blessed($user_by_name) && $user_by_name->isa('Instagram::API::Account'), 'Getting account by name #1');
     is($user_by_name->{username}, 'ne01ite',    'Getting account by name #2');
     is($user_by_name->{id},       '1838386734', 'Getting account by name #3');
+
+    {
+        no warnings 'redefine';
+        local *Instagram::API::Endpoints::getAccountJsonLink = sub { return 'https://www.instagram.com/query/' . $_[0] . '/?a=1'; };
+        eval { $instagram->getAccount('NSDALUJaASDNFLUADKFNA') };
+        like($@, qr/^Account with given username does not exist./, 'Fail get account by name with 404');
+    }
 
 #>----------------------------------------------------------------------------<#
 #>                               getAccountById                               <#
@@ -43,6 +51,19 @@ SKIP: {
     ok(blessed($user_by_id) && $user_by_id->isa('Instagram::API::Account'), 'Getting account by ID');
     is($user_by_id->{id},       '1838386734', 'Getting account by name #2');
     is($user_by_id->{username}, 'ne01ite',    'Getting account by name #3');
+
+    eval { $instagram->getAccountById(12347867214694126) };
+    like($@, qr/^User with this id not found/, 'Fail get account by ID with unexisting ID');
+
+    eval { $instagram->getAccountById('blahblahblahid') };
+    like($@, qr/^User id must be integer or integer wrapped in string/, 'Fail get account by ID with NaN ID');
+
+    {
+        no warnings 'redefine';
+        local *Instagram::API::Endpoints::getAccountJsonInfoLinkByAccountId = sub { return 'https://www.instagram.com/' . $_[0] . '/?a=1'; };
+        eval { $instagram->getAccountById(12347867214694126932) };
+        like($@, qr/^Response code is \d+. Body: .+? Something went wrong. Please report issue\./, 'Fail get account by ID with 404');
+    }
 
 #>----------------------------------------------------------------------------<#
 #>                                 getMedias                                  <#

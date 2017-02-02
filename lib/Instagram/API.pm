@@ -54,7 +54,7 @@ sub getAccount($$)
     }
     if ($response->code != 200) {
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.';
+        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
     }
 
     my $userArray = decode_json($response->content);
@@ -75,7 +75,15 @@ sub getAccountById($$)
     }
 
     my $parameters = Instagram::API::Endpoints::getAccountJsonInfoLinkByAccountId($id);
-    my $userArray = decode_json($self->_getContentsFromUrl($parameters));
+
+    my $response = $self->_getContentsFromUrl($parameters);
+
+    if ($response->code != 200) {
+        #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
+        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.';
+    }
+
+    my $userArray = decode_json($response->content);
 #warn Data::Dumper::Dumper $userArray;
     if ($userArray->{'status'} eq 'fail') {
         #throw new InstagramException($userArray['message']);
@@ -125,7 +133,7 @@ sub _getContentsFromUrl($$)
     #my $output = curl_exec($ch);
     #curl_close($ch);
 
-    return $response->content;
+    return $response;#->content;
 }
 
 sub _generateRandomString($;$)
@@ -181,10 +189,6 @@ sub getMedias($$;$$)
             $index++;
         }
 
-        if (@{$arr->{'items'}} == 0) {
-            return $medias;
-        }
-
         $maxId           = $arr->{'items'}[-1]{'id'};
         $isMoreAvailable = $arr->{'more_available'};
     }
@@ -228,7 +232,7 @@ sub getPaginateMedias($$;$)
         push @{$medias}, Instagram::API::Media->fromApi($mediaArray);
     }
 
-    $maxId = $arr->{'items'}[-1]{'id'};
+    $maxId       = $arr->{'items'}[-1]{'id'};
     $hasNextPage = $arr->{'more_available'};
 
     $toReturn = {
