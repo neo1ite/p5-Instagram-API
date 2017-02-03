@@ -17,3 +17,4 @@ os:
 after_success:
   - cpanm --quiet --notest Devel::Cover::Report::Coveralls
   - cover -test -report coveralls
+  - cover -test -report codecov
