@@ -22,8 +22,8 @@ ok(blessed($instagram->{browser}) && $instagram->{browser}->isa('LWP::UserAgent'
 
 my $r = $instagram->{browser}->get('https://www.instagram.com/');
 
-sub get_response_with_code($$;$$$) {
-    my ($instance, $sub, $params, $code, $method) = @_;
+sub get_response_with_code($$;$$$$$) {
+    my ($instance, $sub, $params, $code, $method, $msg, $content) = @_;
     $params //= [];
     $code   //= 400;
     $method //= 'get';
@@ -33,7 +33,7 @@ sub get_response_with_code($$;$$$) {
     local $instance->{browser} = LWP::UserAgent->new();
     my $package = ref($instance->{browser}) . '::MonkeyPatch';
     @{$package . '::ISA'} = (ref($instance->{browser}));
-    *{$package . '::' . $method} = sub { return HTTP::Response->new($code); };
+    *{$package . '::' . $method} = sub { return HTTP::Response->new($code, $msg, undef, $content); };
     bless $instance->{browser}, $package;
     eval { $instance->$sub(@{$params}) };
 
@@ -55,6 +55,7 @@ SKIP: {
 
     like(get_response_with_code($instagram, 'getAccount', ['NSDALUJaASDNFLUADKFNA'], 404), qr/^Account with given username does not exist\./, 'Fail get account by name with code 404');
     like(get_response_with_code($instagram, 'getAccount', ['NSDALUJaASDNFLUADKFNA']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get account by name with code 400');
+    like(get_response_with_code($instagram, 'getAccount', ['NSDALUJaASDNFLUADKFNA'], 200, undef, 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail get account by name by broken JSON');
 
 #>----------------------------------------------------------------------------<#
 #>                              getAccountById(8)                             <#
@@ -72,6 +73,7 @@ SKIP: {
     eval { $instagram->getAccountById('blahblahblahid') };
     like($@, qr/^User id must be integer or integer wrapped in string/, 'Fail get account by ID with NaN ID');
     like(get_response_with_code($instagram, 'getAccountById', [1838386734], 400, 'request'), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get account by ID with code 400');
+    like(get_response_with_code($instagram, 'getAccountById', ['1838386734'], 200, 'request', 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail get account by ID by broken JSON');
 
 #>----------------------------------------------------------------------------<#
 #>                                getMedias(1)                                <#
@@ -92,6 +94,7 @@ SKIP: {
     );
 
     like(get_response_with_code($instagram, 'getMedias', ['ne01ite']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get medias by username with code 400');
+    like(get_response_with_code($instagram, 'getMedias', ['ne01ite'], 200, undef, 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail get medias by username by broken JSON');
 
 #>----------------------------------------------------------------------------<#
 #>                       getMedias(1 + (20 * (15 + 4)))                       <#
@@ -167,6 +170,7 @@ SKIP: {
     }
 
     like(get_response_with_code($instagram, 'getPaginateMedias', ['avrillavigne']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get paginate medias by username with code 400');
+    like(get_response_with_code($instagram, 'getPaginateMedias', ['avrillavigne'], 200, undef, 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail get paginate medias by username by broken JSON');
 
 #>----------------------------------------------------------------------------<#
 #>                              getMediaByUrl(17)                             <#
@@ -195,6 +199,7 @@ SKIP: {
 
     like(get_response_with_code($instagram, 'getMediaByUrl', ['https://www.instagram.com/p/BP6dCn0B2Vc/'], 404), qr/^Media with given code does not exist or account is private\./, 'Fail get media by URL with code 404');
     like(get_response_with_code($instagram, 'getMediaByUrl', ['https://www.instagram.com/p/BP6dCn0B2Vc/']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get media by URL with code 400');
+    like(get_response_with_code($instagram, 'getMediaByUrl', ['https://www.instagram.com/p/BP6dCn0B2Vc/'], 200, undef, 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail get media by URL by broken JSON');
 
 #>----------------------------------------------------------------------------<#
 #>                             getMediaByCode(17)                             <#
@@ -223,6 +228,7 @@ SKIP: {
 
     like(get_response_with_code($instagram, 'getMediaByCode', ['BOSsBnUhAaF'], 404), qr/^Media with given code does not exist or account is private\./, 'Fail get media by code with code 404');
     like(get_response_with_code($instagram, 'getMediaByCode', ['BOSsBnUhAaF']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get media by code with code 400');
+    like(get_response_with_code($instagram, 'getMediaByCode', ['BOSsBnUhAaF'], 200, undef, 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail get media by code by broken JSON');
 
 #>----------------------------------------------------------------------------<#
 #>                 getPaginateMediasByTag(3 + (20 * (13 + 1)))                <#
@@ -256,6 +262,7 @@ SKIP: {
     }
 
     like(get_response_with_code($instagram, 'getPaginateMediasByTag', ['winter']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get paginate medias by tag with code 400');
+    like(get_response_with_code($instagram, 'getPaginateMediasByTag', ['winter'], 200, undef, 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail get paginate medias by tag by broken JSON');
 
 #>----------------------------------------------------------------------------<#
 #>                     getMediasByTag(3 + (20 * (13 + 1)))                    <#
@@ -288,6 +295,7 @@ SKIP: {
     }
 
     like(get_response_with_code($instagram, 'getMediasByTag', ['россия']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get medias by tag with code 400');
+    like(get_response_with_code($instagram, 'getMediasByTag', ['россия'], 200, undef, 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail get medias by tag by broken JSON');
 
 #>----------------------------------------------------------------------------<#
 #>                   searchAccountsByUsername(2 + (99 * 8))                   <#
@@ -310,6 +318,7 @@ SKIP: {
     }
 
     like(get_response_with_code($instagram, 'searchAccountsByUsername', ['ne01ite']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail search account by name with code 400');
+    like(get_response_with_code($instagram, 'searchAccountsByUsername', ['ne01ite'], 200, undef, 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail search account by name by broken JSON');
 
 #>----------------------------------------------------------------------------<#
 #>                      searchTagsByTagName(2 + (3 * 4))                      <#
@@ -326,6 +335,7 @@ SKIP: {
     }
 
     like(get_response_with_code($instagram, 'searchTagsByTagName', ['солн']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail search tags by name with code 400');
+    like(get_response_with_code($instagram, 'searchTagsByTagName', ['солн'], 200, undef, 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail search tags by name by broken JSON');
 
 #>----------------------------------------------------------------------------<#
 #>                     getTopMediasByTagName(2 + (3 * 4))                     <#
@@ -359,6 +369,7 @@ SKIP: {
     }
 
     like(get_response_with_code($instagram, 'getTopMediasByTagName', ['sweethome']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get top medias by tag with code 400');
+    like(get_response_with_code($instagram, 'getTopMediasByTagName', ['sweethome'], 200, undef, 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail get top medias by tag by broken JSON');
 
 #>----------------------------------------------------------------------------<#
 #>                              getMediaById(17)                              <#
@@ -385,7 +396,8 @@ SKIP: {
     ok(exists($media_by_id->{locationId})      || 1);
     ok(exists($media_by_id->{locationName})    || 1);
 
-    like(get_response_with_code($instagram, 'getMediaById', ['1422615236019959838']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get media by id with code 400');
+    like(get_response_with_code($instagram, 'getMediaById', [1422615236019959838]), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get media by id with code 400');
+    like(get_response_with_code($instagram, 'getMediaById', [1422615236019959838], 200, undef, 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail get media by id by broken JSON');
 
 #>----------------------------------------------------------------------------<#
 #>                    getMediaCommentsByCode(1 + (10 * 5))                    <#
@@ -405,7 +417,8 @@ SKIP: {
         ok(exists($comment->{createdAt}));
     }
 
-    like(get_response_with_code($instagram, 'getMediaCommentsByCode', ['BP79NgXhdJn']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get media comments by code with code 400');
+    like(get_response_with_code($instagram, 'getMediaCommentsByCode', ['BP79NgXhdJn'], 400, 'request'), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get media comments by code with code 400');
+    like(get_response_with_code($instagram, 'getMediaCommentsByCode', ['BP79NgXhdJn'], 200, 'request', 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail get media comments by code by broken JSON');
 
 #>----------------------------------------------------------------------------<#
 #>                     getMediaCommentsById(1 + (10 * 5))                     <#
@@ -424,7 +437,8 @@ SKIP: {
         ok(exists($comment->{createdAt}));
     }
 
-    like(get_response_with_code($instagram, 'getMediaCommentsById', ['1175476025847977789']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get media comments by id with code 400');
+    like(get_response_with_code($instagram, 'getMediaCommentsById', [1175476025847977789], 400, 'request'), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get media comments by id with code 400');
+    like(get_response_with_code($instagram, 'getMediaCommentsById', [1175476025847977789], 200, 'request', 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail get media comments by id by broken JSON');
 
 #>----------------------------------------------------------------------------<#
 #>                getLocationTopMediasById(1 + (12 * (13 + 1)))               <#
@@ -457,6 +471,7 @@ SKIP: {
     }
 
     like(get_response_with_code($instagram, 'getLocationTopMediasById', [60969779]), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get location top medias by id with code 400');
+    like(get_response_with_code($instagram, 'getLocationTopMediasById', [60969779], 200, undef, 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail get location top medias by id by broken JSON');
 
 #>----------------------------------------------------------------------------<#
 #>                 getLocationMediasById(1 + (12 * (13 + 1)))                 <#
@@ -489,6 +504,7 @@ SKIP: {
     }
 
     like(get_response_with_code($instagram, 'getLocationMediasById', [60969779]), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get location medias by id with code 400');
+    like(get_response_with_code($instagram, 'getLocationMediasById', [60969779], 200, undef, 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail get location medias by id by broken JSON');
 
 #>----------------------------------------------------------------------------<#
 #>                             getLocationById(9)                             <#
@@ -509,6 +525,7 @@ SKIP: {
     is($location_by_id->{lng},  32.491183685900);
 
     like(get_response_with_code($instagram, 'getLocationById', [60969779]), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get location by id with code 400');
+    like(get_response_with_code($instagram, 'getLocationById', [60969779], 200, undef, 'OK', '{"test_var": "test_value", "test_": '), qr/^Response decoding failed\. Returned data corrupted or this library outdated\. Please report issue/, 'Fail get location by id by broken JSON');
 };
 
 #########################

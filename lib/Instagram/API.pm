@@ -16,20 +16,6 @@ use Instagram::API::Tag;
 use Instagram::API::Comment;
 use Instagram::API::Location;
 
-require Exporter;
-
-our @ISA = qw(Exporter);
-
-our %EXPORT_TAGS = ( 'all' => [ qw(
-
-) ] );
-
-our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
-
-our @EXPORT = qw(
-
-);
-
 our $VERSION = '0.01';
 
 use constant MAX_COMMENTS_PER_REQUEST => 300;
@@ -367,11 +353,6 @@ sub searchAccountsByUsername($$)
     my ($self, $username) = @_;
 
     my $response = $self->{browser}->get(Instagram::API::Endpoints::getGeneralSearchJsonLink($username));
-
-    #if ($response->code == 404) {
-    #    #throw new InstagramNotFoundException('Account with given username does not exist.');
-    #    croak 'Account with given username does not exist.';
-    #}
 
     croak 'Response code is ' . $response->code
         . '. Body: ' . $response->content
