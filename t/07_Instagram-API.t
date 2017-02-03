@@ -22,6 +22,24 @@ ok(blessed($instagram->{browser}) && $instagram->{browser}->isa('LWP::UserAgent'
 
 my $r = $instagram->{browser}->get('https://www.instagram.com/');
 
+sub get_response_with_code($$;$$$) {
+    my ($instance, $sub, $params, $code, $method) = @_;
+    $params //= [];
+    $code   //= 400;
+    $method //= 'get';
+
+    no strict 'refs';
+    no warnings 'redefine';
+    local $instance->{browser} = LWP::UserAgent->new();
+    my $package = ref($instance->{browser}) . '::MonkeyPatch';
+    @{$package . '::ISA'} = (ref($instance->{browser}));
+    *{$package . '::' . $method} = sub { return HTTP::Response->new($code); };
+    bless $instance->{browser}, $package;
+    eval { $instance->$sub(@{$params}) };
+
+    return $@;
+}
+
 SKIP: {
     skip 'No connection with Instragram.com', 60 + (20 * 19) + (14 * 20) + (20 * 19) + (14 * 20) + (99 * 8) unless ($r && $r->code == 200);
 
@@ -35,12 +53,8 @@ SKIP: {
     is($user_by_name->{username}, 'ne01ite',    'Getting account by name #2');
     is($user_by_name->{id},       '1838386734', 'Getting account by name #3');
 
-    {
-        no warnings 'redefine';
-        local *Instagram::API::Endpoints::getAccountJsonLink = sub { return 'https://www.instagram.com/query/' . $_[0] . '/?a=1'; };
-        eval { $instagram->getAccount('NSDALUJaASDNFLUADKFNA') };
-        like($@, qr/^Account with given username does not exist./, 'Fail get account by name with 404');
-    }
+    like(get_response_with_code($instagram, 'getAccount', ['NSDALUJaASDNFLUADKFNA'], 404), qr/^Account with given username does not exist\./, 'Fail get account by name with code 404');
+    like(get_response_with_code($instagram, 'getAccount', ['NSDALUJaASDNFLUADKFNA']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get account by name with code 400');
 
 #>----------------------------------------------------------------------------<#
 #>                              getAccountById(8)                             <#
@@ -57,13 +71,7 @@ SKIP: {
 
     eval { $instagram->getAccountById('blahblahblahid') };
     like($@, qr/^User id must be integer or integer wrapped in string/, 'Fail get account by ID with NaN ID');
-
-    {
-        no warnings 'redefine';
-        local *Instagram::API::Endpoints::getAccountJsonInfoLinkByAccountId = sub { return 'https://www.instagram.com/' . $_[0] . '/?a=1'; };
-        eval { $instagram->getAccountById(12347867214694126932) };
-        like($@, qr/^Response code is \d+. Body: .+? Something went wrong. Please report issue\./, 'Fail get account by ID with 404');
-    }
+    like(get_response_with_code($instagram, 'getAccountById', [1838386734], 400, 'request'), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get account by ID with code 400');
 
 #>----------------------------------------------------------------------------<#
 #>                                getMedias(1)                                <#
@@ -82,6 +90,8 @@ SKIP: {
         ),
         'Getting none user medias'
     );
+
+    like(get_response_with_code($instagram, 'getMedias', ['ne01ite']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get medias by username with code 400');
 
 #>----------------------------------------------------------------------------<#
 #>                       getMedias(1 + (20 * (15 + 4)))                       <#
@@ -156,6 +166,8 @@ SKIP: {
         $i++;
     }
 
+    like(get_response_with_code($instagram, 'getPaginateMedias', ['avrillavigne']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get paginate medias by username with code 400');
+
 #>----------------------------------------------------------------------------<#
 #>                              getMediaByUrl(17)                             <#
 #>----------------------------------------------------------------------------<#
@@ -181,6 +193,9 @@ SKIP: {
     ok(exists($media_by_url->{locationId})      || 1);
     ok(exists($media_by_url->{locationName})    || 1);
 
+    like(get_response_with_code($instagram, 'getMediaByUrl', ['https://www.instagram.com/p/BP6dCn0B2Vc/'], 404), qr/^Media with given code does not exist or account is private\./, 'Fail get media by URL with code 404');
+    like(get_response_with_code($instagram, 'getMediaByUrl', ['https://www.instagram.com/p/BP6dCn0B2Vc/']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get media by URL with code 400');
+
 #>----------------------------------------------------------------------------<#
 #>                             getMediaByCode(17)                             <#
 #>----------------------------------------------------------------------------<#
@@ -205,6 +220,9 @@ SKIP: {
     ok(exists($media_by_code->{isAd})            || 1);
     ok(exists($media_by_code->{locationId})      || 1);
     ok(exists($media_by_code->{locationName})    || 1);
+
+    like(get_response_with_code($instagram, 'getMediaByCode', ['BOSsBnUhAaF'], 404), qr/^Media with given code does not exist or account is private\./, 'Fail get media by code with code 404');
+    like(get_response_with_code($instagram, 'getMediaByCode', ['BOSsBnUhAaF']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get media by code with code 400');
 
 #>----------------------------------------------------------------------------<#
 #>                 getPaginateMediasByTag(3 + (20 * (13 + 1)))                <#
@@ -237,6 +255,8 @@ SKIP: {
         $i++;
     }
 
+    like(get_response_with_code($instagram, 'getPaginateMediasByTag', ['winter']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get paginate medias by tag with code 400');
+
 #>----------------------------------------------------------------------------<#
 #>                     getMediasByTag(3 + (20 * (13 + 1)))                    <#
 #>----------------------------------------------------------------------------<#
@@ -267,6 +287,8 @@ SKIP: {
         $i++;
     }
 
+    like(get_response_with_code($instagram, 'getMediasByTag', ['россия']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get medias by tag with code 400');
+
 #>----------------------------------------------------------------------------<#
 #>                   searchAccountsByUsername(2 + (99 * 8))                   <#
 #>----------------------------------------------------------------------------<#
@@ -287,6 +309,8 @@ SKIP: {
         ok(exists($account->{isVerified}));
     }
 
+    like(get_response_with_code($instagram, 'searchAccountsByUsername', ['ne01ite']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail search account by name with code 400');
+
 #>----------------------------------------------------------------------------<#
 #>                      searchTagsByTagName(2 + (3 * 4))                      <#
 #>----------------------------------------------------------------------------<#
@@ -300,6 +324,8 @@ SKIP: {
         ok(exists($tag->{name}));
         ok(exists($tag->{mediaCount}));
     }
+
+    like(get_response_with_code($instagram, 'searchTagsByTagName', ['солн']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail search tags by name with code 400');
 
 #>----------------------------------------------------------------------------<#
 #>                     getTopMediasByTagName(2 + (3 * 4))                     <#
@@ -332,6 +358,8 @@ SKIP: {
         $i++;
     }
 
+    like(get_response_with_code($instagram, 'getTopMediasByTagName', ['sweethome']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get top medias by tag with code 400');
+
 #>----------------------------------------------------------------------------<#
 #>                              getMediaById(17)                              <#
 #>----------------------------------------------------------------------------<#
@@ -357,6 +385,8 @@ SKIP: {
     ok(exists($media_by_id->{locationId})      || 1);
     ok(exists($media_by_id->{locationName})    || 1);
 
+    like(get_response_with_code($instagram, 'getMediaById', ['1422615236019959838']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get media by id with code 400');
+
 #>----------------------------------------------------------------------------<#
 #>                    getMediaCommentsByCode(1 + (10 * 5))                    <#
 #>----------------------------------------------------------------------------<#
@@ -375,6 +405,8 @@ SKIP: {
         ok(exists($comment->{createdAt}));
     }
 
+    like(get_response_with_code($instagram, 'getMediaCommentsByCode', ['BP79NgXhdJn']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get media comments by code with code 400');
+
 #>----------------------------------------------------------------------------<#
 #>                     getMediaCommentsById(1 + (10 * 5))                     <#
 #>----------------------------------------------------------------------------<#
@@ -391,6 +423,8 @@ SKIP: {
         ok(exists($comment->{text}));
         ok(exists($comment->{createdAt}));
     }
+
+    like(get_response_with_code($instagram, 'getMediaCommentsById', ['1175476025847977789']), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get media comments by id with code 400');
 
 #>----------------------------------------------------------------------------<#
 #>                getLocationTopMediasById(1 + (12 * (13 + 1)))               <#
@@ -422,6 +456,8 @@ SKIP: {
         $i++;
     }
 
+    like(get_response_with_code($instagram, 'getLocationTopMediasById', [60969779]), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get location top medias by id with code 400');
+
 #>----------------------------------------------------------------------------<#
 #>                 getLocationMediasById(1 + (12 * (13 + 1)))                 <#
 #>----------------------------------------------------------------------------<#
@@ -452,6 +488,8 @@ SKIP: {
         $i++;
     }
 
+    like(get_response_with_code($instagram, 'getLocationMediasById', [60969779]), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get location medias by id with code 400');
+
 #>----------------------------------------------------------------------------<#
 #>                             getLocationById(9)                             <#
 #>----------------------------------------------------------------------------<#
@@ -469,6 +507,8 @@ SKIP: {
     is($location_by_id->{name}, 'Турбаза Арктика');
     is($location_by_id->{lat},  68.786284278082);
     is($location_by_id->{lng},  32.491183685900);
+
+    like(get_response_with_code($instagram, 'getLocationById', [60969779]), qr/^Response code is 400\. Body\: .*? Something went wrong\. Please report issue\./, 'Fail get location by id with code 400');
 };
 
 #########################
