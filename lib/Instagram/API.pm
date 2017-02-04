@@ -8,8 +8,10 @@ use autouse 'Data::Dumper';
 use Carp qw/carp croak cluck confess/;
 use Try::Tiny;
 use JSON::MaybeXS;
+use HTTP::Cookies;
 use LWP::UserAgent;
 use Data::Validate::URI qw(is_uri);
+
 use Instagram::API::Endpoints;
 use Instagram::API::Media;
 use Instagram::API::Tag;
@@ -25,7 +27,10 @@ sub new($;$) {
 
     my $class = ref($invocant) || $invocant;
     my $self = { %{$params // {}} };
+    $self->{cookie_jar} = HTTP::Cookies->new;
+    $self->{cookie_jar}->clear;
     $self->{browser} ||= LWP::UserAgent->new(agent => 'instagram-api-' . $VERSION);
+    $self->{browser}->cookie_jar($self->{cookie_jar});
 	carp 'Browser is not a LWP::UserAgent' unless $self->{browser}->isa('LWP::UserAgent');
 
     bless($self, $class);
