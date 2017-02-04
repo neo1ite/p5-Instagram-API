@@ -23,7 +23,7 @@ our $VERSION = '0.01';
 our $Debug   = 0;
 
 use constant MAX_COMMENTS_PER_REQUEST           => 300;
-use constant MAX_DELAY_BETWEEN_REQUEST_ATTEMPTS => 5;   # floating seconds
+use constant MAX_DELAY_BETWEEN_REQUEST_ATTEMPTS => 7;   # floating seconds
 use constant MAX_REQUEST_ATTEMPTS               => 3;
 
 sub new($;$) {
