@@ -20,6 +20,7 @@ use Instagram::API::Comment;
 use Instagram::API::Location;
 
 our $VERSION = '0.01';
+our $Debug   = 0;
 
 use constant MAX_COMMENTS_PER_REQUEST           => 300;
 use constant MAX_DELAY_BETWEEN_REQUEST_ATTEMPTS => 5;   # floating seconds
@@ -61,7 +62,7 @@ sub getAccount($$)
     try {
         $userArray = decode_json($response->content);
     } catch {
-        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue: ' . (($_ && $Debug) ? $_ : '');
     };
 
     croak 'Account with this username does not exist' if (!exists($userArray->{'user'}));
@@ -90,7 +91,7 @@ cluck Data::Dumper::Dumper $response if ($response->code == 403);
     try {
         $userArray = decode_json($response->content);
     } catch {
-        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue: ' . (($_ && $Debug) ? $_ : '');
     };
 
     croak $userArray->{'message'} if ($userArray->{'status'} eq 'fail');
@@ -166,7 +167,7 @@ sub getMedias($$;$$)
         try {
             $jsonResponse = decode_json($response->content);
         } catch {
-            croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+            croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue: ' . (($_ && $Debug) ? $_ : '');
         };
 
         return [] unless @{$jsonResponse->{'items'} // []};
@@ -215,7 +216,7 @@ sub getPaginateMedias($$;$)
     try {
         $jsonResponse = decode_json($response->content);
     } catch {
-        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue: ' . (($_ && $Debug) ? $_ : '');
     };
 
     return $toReturn unless @{$jsonResponse->{'items'} // []};
@@ -265,7 +266,7 @@ sub getMediaByUrl($$)
     try {
         $mediaArray = decode_json($response->content);
     } catch {
-        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue: ' . (($_ && $Debug) ? $_ : '');
     };
 
     croak 'Media with this code does not exist' unless exists($mediaArray->{'media'});
@@ -299,7 +300,7 @@ sub getMediasByTag($$;$$)
         try {
             $jsonResponse = decode_json($response->content);
         } catch {
-            croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+            croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue: ' . (($_ && $Debug) ? $_ : '');
         };
         return $medias unless $jsonResponse->{'tag'}{'media'}{'count'};
 
@@ -349,7 +350,7 @@ sub getPaginateMediasByTag($$;$)
     try {
         $jsonResponse = decode_json($response->content);
     } catch {
-        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue: ' . (($_ && $Debug) ? $_ : '');
     };
     return $toReturn unless $jsonResponse->{'tag'}{'media'}{'count'};
 
@@ -391,7 +392,7 @@ sub searchAccountsByUsername($$)
     try {
         $jsonResponse = decode_json($response->content);
     } catch {
-        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue: ' . (($_ && $Debug) ? $_ : '');
     };
 
     croak 'Response code is not equal 200. Something went wrong. Please report issue.' if (!exists($jsonResponse->{'status'}) || $jsonResponse->{'status'} ne 'ok');
@@ -426,7 +427,7 @@ sub searchTagsByTagName($$)
     try {
         $jsonResponse = decode_json($response->content);
     } catch {
-        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue: ' . (($_ && $Debug) ? $_ : '');
     };
 
     croak 'Response code is not equal 200. Something went wrong. Please report issue.' if (!exists($jsonResponse->{'status'}) || $jsonResponse->{'status'} ne 'ok');
@@ -462,7 +463,7 @@ sub getTopMediasByTagName($$)
     try {
         $jsonResponse = decode_json($response->content);
     } catch {
-        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue: ' . (($_ && $Debug) ? $_ : '');
     };
 
     my $medias = [];
@@ -535,7 +536,7 @@ cluck Data::Dumper::Dumper $response if ($response->code == 403);
         try {
             $jsonResponse = decode_json($response->content);
         } catch {
-            croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+            croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue: ' . (($_ && $Debug) ? $_ : '');
         };
 
         my $nodes = $jsonResponse->{'comments'}{'nodes'};
@@ -576,7 +577,7 @@ sub getLocationTopMediasById($$)
     try {
         $jsonResponse = decode_json($response->content);
     } catch {
-        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue: ' . (($_ && $Debug) ? $_ : '');
     };
 
     my $nodes = $jsonResponse->{'location'}{'top_posts'}{'nodes'};
@@ -616,7 +617,7 @@ sub getLocationMediasById($$;$$)
         try {
             $jsonResponse = decode_json($response->content);
         } catch {
-            croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+            croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue: ' . (($_ && $Debug) ? $_ : '');
         };
 
         my $nodes = $jsonResponse->{'location'}{'media'}{'nodes'};
@@ -658,7 +659,7 @@ sub getLocationById($$)
     try {
         $jsonResponse = decode_json($response->content);
     } catch {
-        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue';
+        croak 'Response decoding failed. Returned data corrupted or this library outdated. Please report issue: ' . (($_ && $Debug) ? $_ : '');
     };
 
     return Instagram::API::Location->makeLocation($jsonResponse->{'location'});
