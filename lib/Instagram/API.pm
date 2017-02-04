@@ -25,7 +25,7 @@ sub new($;$) {
 
     my $class = ref($invocant) || $invocant;
     my $self = { %{$params // {}} };
-    $self->{browser} ||= LWP::UserAgent->new();
+    $self->{browser} ||= LWP::UserAgent->new(agent => 'instagram-api-' . $VERSION);
 	carp 'Browser is not a LWP::UserAgent' unless $self->{browser}->isa('LWP::UserAgent');
 
     bless($self, $class);
