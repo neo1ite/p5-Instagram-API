@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use autouse 'Data::Dumper';
 
-use Carp qw/cluck/;
+use Carp qw/carp croak cluck confess/;
 use Try::Tiny;
 use JSON::MaybeXS;
 use LWP::UserAgent;
