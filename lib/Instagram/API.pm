@@ -22,7 +22,7 @@ use Instagram::API::Location;
 our $VERSION = '0.01';
 
 use constant MAX_COMMENTS_PER_REQUEST       => 300;
-use constant DELAY_BETWEEN_REQUEST_ATTEMPTS => 3;   # floating seconds
+use constant DELAY_BETWEEN_REQUEST_ATTEMPTS => 5;   # floating seconds
 use constant MAX_REQUEST_ATTEMPTS           => 3;
 
 sub new($;$) {
