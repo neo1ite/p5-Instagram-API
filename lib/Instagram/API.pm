@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use autouse 'Data::Dumper';
 
-use Carp;
+use Carp qw/cluck/;
 use Try::Tiny;
 use JSON::MaybeXS;
 use LWP::UserAgent;
@@ -41,7 +41,7 @@ sub getAccount($$)
 
     croak 'Account with given username does not exist.' if ($response->code == 404);
     #throw new InstagramNotFoundException('Account with given username does not exist.');
-
+cluck Data::Dumper::Dumper $response if ($response->code == 403);
     croak 'Response code is ' . $response->code
         . '. Body: ' . $response->content
         . ' Something went wrong. Please report issue.' if ($response->code != 200);
@@ -70,7 +70,7 @@ sub getAccountById($$)
     my $parameters = Instagram::API::Endpoints::getAccountJsonInfoLinkByAccountId($id);
 
     my $response = $self->_getContentsFromUrl($parameters);
-
+cluck Data::Dumper::Dumper $response if ($response->code == 403);
     croak 'Response code is ' . $response->code
         . '. Body: ' . $response->content
         . ' Something went wrong. Please report issue.' if ($response->code != 200);
@@ -142,7 +142,7 @@ sub getMedias($$;$$)
 
     while ($index < $count && $isMoreAvailable) {
         my $response = $self->{browser}->get(Instagram::API::Endpoints::getAccountMediasJsonLink($username, $maxId));
-
+cluck Data::Dumper::Dumper $response if ($response->code == 403);
         croak 'Response code is ' . $response->code
             . '. Body: ' . $response->content
             . ' Something went wrong. Please report issue.' if ($response->code != 200);
@@ -187,7 +187,7 @@ sub getPaginateMedias($$;$)
     };
 
     my $response = $self->{browser}->get(Instagram::API::Endpoints::getAccountMediasJsonLink($username, $maxId));
-
+cluck Data::Dumper::Dumper $response if ($response->code == 403);
     croak 'Response code is ' . $response->code
         . '. Body: ' . $response->content
         . ' Something went wrong. Please report issue.' if ($response->code != 200);
@@ -236,7 +236,7 @@ sub getMediaByUrl($$)
 
     croak 'Media with given code does not exist or account is private.' if ($response->code == 404);
     #throw new InstagramNotFoundException('Media with given code does not exist or account is private.');
-
+cluck Data::Dumper::Dumper $response if ($response->code == 403);
     croak 'Response code is ' . $response->code
         . '. Body: ' . $response->content
         . ' Something went wrong. Please report issue.' if ($response->code != 200);
@@ -267,7 +267,7 @@ sub getMediasByTag($$;$$)
 
     while ($index < $count && $hasNextPage) {
         my $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByTagLink($tag, $maxId));
-
+cluck Data::Dumper::Dumper $response if ($response->code == 403);
         croak 'Response code is ' . $response->code
             . '. Body: ' . $response->content
             . ' Something went wrong. Please report issue.' if ($response->code != 200);
@@ -314,7 +314,7 @@ sub getPaginateMediasByTag($$;$)
     };
 
     my $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByTagLink($tag, $maxId));
-
+cluck Data::Dumper::Dumper $response if ($response->code == 403);
     croak 'Response code is ' . $response->code
         . '. Body: ' . $response->content
         . ' Something went wrong. Please report issue.' if ($response->code != 200);
@@ -353,7 +353,7 @@ sub searchAccountsByUsername($$)
     my ($self, $username) = @_;
 
     my $response = $self->{browser}->get(Instagram::API::Endpoints::getGeneralSearchJsonLink($username));
-
+cluck Data::Dumper::Dumper $response if ($response->code == 403);
     croak 'Response code is ' . $response->code
         . '. Body: ' . $response->content
         . ' Something went wrong. Please report issue.' if ($response->code != 200);
@@ -390,8 +390,10 @@ sub searchTagsByTagName($$)
     #    #throw new InstagramNotFoundException('Account with given username does not exist.');
     #    croak 'Account with given username does not exist.';
     #}
-
-    croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.' if ($response->code != 200);
+cluck Data::Dumper::Dumper $response if ($response->code == 403);
+    croak 'Response code is ' . $response->code
+        . '. Body: ' . $response->content
+        . ' Something went wrong. Please report issue.' if ($response->code != 200);
     #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
 
     my $jsonResponse;
@@ -425,8 +427,10 @@ sub getTopMediasByTagName($$)
         #throw new InstagramNotFoundException('Account with given username does not exist.');
         croak 'Account with given username does not exist.';
     }
-
-    croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.' if ($response->code != 200);
+cluck Data::Dumper::Dumper $response if ($response->code == 403);
+    croak 'Response code is ' . $response->code
+        . '. Body: ' . $response->content
+        . ' Something went wrong. Please report issue.' if ($response->code != 200);
     #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
 
     my $jsonResponse;
@@ -497,8 +501,10 @@ sub getMediaCommentsByCode($$;$$)
         }
 
         my $response = $self->_getContentsFromUrl($parameters);
-
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.' if ($response->code != 200);
+cluck Data::Dumper::Dumper $response if ($response->code == 403);
+        croak 'Response code is ' . $response->code
+            . '. Body: ' . $response->content
+            . ' Something went wrong. Please report issue.' if ($response->code != 200);
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
 
         my $jsonResponse;
@@ -535,8 +541,10 @@ sub getLocationTopMediasById($$)
 
     croak 'Location with this id doesn\'t exist' if ($response->code == 404);
     #throw new InstagramNotFoundException('Location with this id doesn\'t exist');
-
-    croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.' if ($response->code != 200);
+cluck Data::Dumper::Dumper $response if ($response->code == 403);
+    croak 'Response code is ' . $response->code
+        . '. Body: ' . $response->content
+        . ' Something went wrong. Please report issue.' if ($response->code != 200);
     #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
 
     my $jsonResponse;
@@ -570,8 +578,10 @@ sub getLocationMediasById($$;$$)
 
     while ($index < $quantity && $hasNext) {
         my $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByLocationIdLink($facebookLocationId, $offset));
-
-        croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.' if ($response->code != 200);
+cluck Data::Dumper::Dumper $response if ($response->code == 403);
+        croak 'Response code is ' . $response->code
+            . '. Body: ' . $response->content
+            . ' Something went wrong. Please report issue.' if ($response->code != 200);
         #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
 
         my $jsonResponse;
@@ -609,8 +619,10 @@ sub getLocationById($$)
 
     croak 'Location with this id doesn\'t exist' if ($response->code == 404);
     #throw new InstagramNotFoundException('Location with this id doesn\'t exist');
-
-    croak 'Response code is ' . $response->code . '. Body: ' . $response->content . ' Something went wrong. Please report issue.' if ($response->code != 200);
+cluck Data::Dumper::Dumper $response if ($response->code == 403);
+    croak 'Response code is ' . $response->code
+        . '. Body: ' . $response->content
+        . ' Something went wrong. Please report issue.' if ($response->code != 200);
     #throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.');
 
     my $jsonResponse;
