@@ -21,9 +21,9 @@ use Instagram::API::Location;
 
 our $VERSION = '0.01';
 
-use constant MAX_COMMENTS_PER_REQUEST       => 300;
-use constant DELAY_BETWEEN_REQUEST_ATTEMPTS => 5;   # floating seconds
-use constant MAX_REQUEST_ATTEMPTS           => 3;
+use constant MAX_COMMENTS_PER_REQUEST           => 300;
+use constant MAX_DELAY_BETWEEN_REQUEST_ATTEMPTS => 5;   # floating seconds
+use constant MAX_REQUEST_ATTEMPTS               => 3;
 
 sub new($;$) {
     my ($invocant, $params) = @_;
@@ -48,9 +48,9 @@ sub getAccount($$)
     my $attemps = 0;
     my $response;
     do {
-        Time::HiRes::sleep(rand(DELAY_BETWEEN_REQUEST_ATTEMPTS)) if $attemps;
+        Time::HiRes::sleep((MAX_DELAY_BETWEEN_REQUEST_ATTEMPTS / MAX_REQUEST_ATTEMPTS) * $attemps) if $attemps;
         $response = $self->{browser}->get(Instagram::API::Endpoints::getAccountJsonLink($username));
-    } while ($response->code == 403 && $attemps++ < MAX_REQUEST_ATTEMPTS);
+    } while ($response->code == 403 && $attemps++ <= MAX_REQUEST_ATTEMPTS);
 
     croak 'Account with given username does not exist.' if ($response->code == 404);
     croak 'Response code is ' . $response->code
@@ -154,7 +154,7 @@ sub getMedias($$;$$)
         my $attemps = 0;
         my $response;
         do {
-            Time::HiRes::sleep(rand(DELAY_BETWEEN_REQUEST_ATTEMPTS)) if $attemps;
+            Time::HiRes::sleep((MAX_DELAY_BETWEEN_REQUEST_ATTEMPTS / MAX_REQUEST_ATTEMPTS) * $attemps) if $attemps;
             $response = $self->{browser}->get(Instagram::API::Endpoints::getAccountMediasJsonLink($username, $maxId));
         } while ($response->code == 403 && $attemps++ < MAX_REQUEST_ATTEMPTS);
 
@@ -203,7 +203,7 @@ sub getPaginateMedias($$;$)
     my $attemps = 0;
     my $response;
     do {
-        Time::HiRes::sleep(rand(DELAY_BETWEEN_REQUEST_ATTEMPTS)) if $attemps;
+        Time::HiRes::sleep((MAX_DELAY_BETWEEN_REQUEST_ATTEMPTS / MAX_REQUEST_ATTEMPTS) * $attemps) if $attemps;
         $response = $self->{browser}->get(Instagram::API::Endpoints::getAccountMediasJsonLink($username, $maxId));
     } while ($response->code == 403 && $attemps++ < MAX_REQUEST_ATTEMPTS);
 
@@ -252,7 +252,7 @@ sub getMediaByUrl($$)
     my $attemps = 0;
     my $response;
     do {
-        Time::HiRes::sleep(rand(DELAY_BETWEEN_REQUEST_ATTEMPTS)) if $attemps;
+        Time::HiRes::sleep((MAX_DELAY_BETWEEN_REQUEST_ATTEMPTS / MAX_REQUEST_ATTEMPTS) * $attemps) if $attemps;
         $response = $self->{browser}->get(($mediaUrl =~ s!/+$!!r) . '/?__a=1');
     } while ($response->code == 403 && $attemps++ < MAX_REQUEST_ATTEMPTS);
 
@@ -287,7 +287,7 @@ sub getMediasByTag($$;$$)
         my $attemps = 0;
         my $response;
         do {
-            Time::HiRes::sleep(rand(DELAY_BETWEEN_REQUEST_ATTEMPTS)) if $attemps;
+            Time::HiRes::sleep((MAX_DELAY_BETWEEN_REQUEST_ATTEMPTS / MAX_REQUEST_ATTEMPTS) * $attemps) if $attemps;
             $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByTagLink($tag, $maxId));
         } while ($response->code == 403 && $attemps++ < MAX_REQUEST_ATTEMPTS);
 
@@ -337,7 +337,7 @@ sub getPaginateMediasByTag($$;$)
     my $attemps = 0;
     my $response;
     do {
-        Time::HiRes::sleep(rand(DELAY_BETWEEN_REQUEST_ATTEMPTS)) if $attemps;
+        Time::HiRes::sleep((MAX_DELAY_BETWEEN_REQUEST_ATTEMPTS / MAX_REQUEST_ATTEMPTS) * $attemps) if $attemps;
         $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByTagLink($tag, $maxId));
     } while ($response->code == 403 && $attemps++ < MAX_REQUEST_ATTEMPTS);
 
@@ -379,7 +379,7 @@ sub searchAccountsByUsername($$)
     my $attemps = 0;
     my $response;
     do {
-        Time::HiRes::sleep(rand(DELAY_BETWEEN_REQUEST_ATTEMPTS)) if $attemps;
+        Time::HiRes::sleep((MAX_DELAY_BETWEEN_REQUEST_ATTEMPTS / MAX_REQUEST_ATTEMPTS) * $attemps) if $attemps;
         $response = $self->{browser}->get(Instagram::API::Endpoints::getGeneralSearchJsonLink($username));
     } while ($response->code == 403 && $attemps++ < MAX_REQUEST_ATTEMPTS);
 
@@ -414,7 +414,7 @@ sub searchTagsByTagName($$)
     my $attemps = 0;
     my $response;
     do {
-        Time::HiRes::sleep(rand(DELAY_BETWEEN_REQUEST_ATTEMPTS)) if $attemps;
+        Time::HiRes::sleep((MAX_DELAY_BETWEEN_REQUEST_ATTEMPTS / MAX_REQUEST_ATTEMPTS) * $attemps) if $attemps;
         $response = $self->{browser}->get(Instagram::API::Endpoints::getGeneralSearchJsonLink($tag));
     } while ($response->code == 403 && $attemps++ < MAX_REQUEST_ATTEMPTS);
 
@@ -449,7 +449,7 @@ sub getTopMediasByTagName($$)
     my $attemps = 0;
     my $response;
     do {
-        Time::HiRes::sleep(rand(DELAY_BETWEEN_REQUEST_ATTEMPTS)) if $attemps;
+        Time::HiRes::sleep((MAX_DELAY_BETWEEN_REQUEST_ATTEMPTS / MAX_REQUEST_ATTEMPTS) * $attemps) if $attemps;
         $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByTagLink($tagName, ''));
     } while ($response->code == 403 && $attemps++ < MAX_REQUEST_ATTEMPTS);
 
@@ -563,7 +563,7 @@ sub getLocationTopMediasById($$)
     my $attemps = 0;
     my $response;
     do {
-        Time::HiRes::sleep(rand(DELAY_BETWEEN_REQUEST_ATTEMPTS)) if $attemps;
+        Time::HiRes::sleep((MAX_DELAY_BETWEEN_REQUEST_ATTEMPTS / MAX_REQUEST_ATTEMPTS) * $attemps) if $attemps;
         $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByLocationIdLink($facebookLocationId));
     } while ($response->code == 403 && $attemps++ < MAX_REQUEST_ATTEMPTS);
 
@@ -604,7 +604,7 @@ sub getLocationMediasById($$;$$)
         my $attemps = 0;
         my $response;
         do {
-            Time::HiRes::sleep(rand(DELAY_BETWEEN_REQUEST_ATTEMPTS)) if $attemps;
+            Time::HiRes::sleep((MAX_DELAY_BETWEEN_REQUEST_ATTEMPTS / MAX_REQUEST_ATTEMPTS) * $attemps) if $attemps;
             $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByLocationIdLink($facebookLocationId, $offset));
         } while ($response->code == 403 && $attemps++ < MAX_REQUEST_ATTEMPTS);
 
@@ -645,7 +645,7 @@ sub getLocationById($$)
     my $attemps = 0;
     my $response;
     do {
-        Time::HiRes::sleep(rand(DELAY_BETWEEN_REQUEST_ATTEMPTS)) if $attemps;
+        Time::HiRes::sleep((MAX_DELAY_BETWEEN_REQUEST_ATTEMPTS / MAX_REQUEST_ATTEMPTS) * $attemps) if $attemps;
         $response = $self->{browser}->get(Instagram::API::Endpoints::getMediasJsonByLocationIdLink($facebookLocationId));
     } while ($response->code == 403 && $attemps++ < MAX_REQUEST_ATTEMPTS);
 
